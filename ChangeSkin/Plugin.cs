@@ -5,6 +5,7 @@ using System.Reflection;
 using BepInEx;
 using BepInEx.Logging;
 using HarmonyLib;
+using KrokoshaCasualtiesMP;
 using MonoMod.RuntimeDetour;
 using UnityEngine;
 
@@ -15,7 +16,7 @@ namespace ChangeSkin
     {
         public const string ModGUID = "05126619z.changeskin";
         public const string ModName = "ChangeSkin";
-        public const string ModVersion = "2.1.0";
+        public const string ModVersion = "2.2.0";
 
         internal static new ManualLogSource Logger;
         private readonly Harmony _harmony = new(ModGUID);
@@ -36,6 +37,7 @@ namespace ChangeSkin
             {
                 Logger.LogError(e);
             }
+            ScavWorldMap.OnWorldgenFinish += ChangeSkinMain.Init;
             Logger.LogInfo($"Plugin {ModName} is loaded!");
         }
 

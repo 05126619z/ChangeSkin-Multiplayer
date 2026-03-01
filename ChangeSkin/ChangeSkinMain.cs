@@ -76,6 +76,7 @@ public static class ChangeSkinMain
             }
         }
         initialized = true;
+        ConsoleScript.instance.LogToConsole("ChangeSkin initialized");
     }
 
     private static void OnSceneUnloaded(Scene scene)
@@ -278,6 +279,7 @@ public static class ChangeSkinMain
             returnmessage = "ChangeSkin initialized";
         }
 
+        Plugin.Instance.SaveConfig();
         Plugin.Logger.LogInfo(returnmessage);
         return returnmessage;
 
