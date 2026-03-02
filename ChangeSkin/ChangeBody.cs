@@ -32,8 +32,12 @@ namespace ChangeSkin
 
         public void LoadSkinLocal(string skinName)
         {
+            bool wasReplacing = false;
             if (working)
+            {
+                wasReplacing = true;
                 StopReplacement();
+            }
             if (loaded)
                 Unload();
             loaded = false;
@@ -48,6 +52,10 @@ namespace ChangeSkin
             );
             loadedName = skinName;
             loaded = true;
+            if (wasReplacing)
+            {
+                BeginReplacement();
+            }
         }
 
         // public void LoadSkinURL(string url)
@@ -57,8 +65,12 @@ namespace ChangeSkin
 
         public void LoadSkinURL(string url)
         {
+            bool wasReplacing = false;
             if (working)
+            {
+                wasReplacing = true;
                 StopReplacement();
+            }
             if (loaded)
                 Unload();
             skinURL = url;
@@ -81,6 +93,10 @@ namespace ChangeSkin
             );
             loadedName = skinName;
             loaded = true;
+            if (wasReplacing)
+            {
+                BeginReplacement();
+            }
         }
 
         public void Reload()
@@ -252,6 +268,7 @@ namespace ChangeSkin
             "Body/experimentHandB.png",
             "Body/experimentHandF.png",
             "Body/experimentNosebleed.png",
+            "Body/experimentEyeHappy.png",
         };
     }
 }

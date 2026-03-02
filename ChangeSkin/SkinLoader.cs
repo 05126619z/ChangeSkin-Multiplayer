@@ -63,7 +63,7 @@ internal static class SkinLoader
         else
         {
             workPath = Path.Combine(Path.GetTempPath(), "ChangeSkin", "remote", skinName);
-            string[] dirNames = Directory.GetDirectories(workPath); // TODO: error here, fuck this shit kill yourself cant get one single directory
+            string[] dirNames = Directory.GetDirectories(workPath);
             if (Plugin.ModConfig.Verbose)
             {
                 foreach (string dirName in dirNames)
@@ -83,10 +83,10 @@ internal static class SkinLoader
             }
             catch
             {
-                Plugin.Logger.LogWarning(
-                    "It seems that some files for the skin are either missing or located in wrong folder structure. Follow the robot template for correct skin loading"
-                );
-                throw;
+                string msg =
+                    "It seems that some files for the skin are either missing or located in wrong folder structure. Follow the robot template for correct skin loading";
+                ConsoleScript.instance.LogToConsole(msg);
+                Plugin.Logger.LogWarning(msg);
             }
         }
     }

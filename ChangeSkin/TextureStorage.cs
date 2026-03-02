@@ -85,6 +85,7 @@ namespace ChangeSkin
             "Body/experimentHandB.png",
             "Body/experimentHandF.png",
             "Body/experimentNosebleed.png",
+            "Body/experimentEyeHappy.png",
         };
     }
 }
