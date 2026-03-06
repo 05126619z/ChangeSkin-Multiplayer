@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: 'To what version of the game are you releasing it?'
+        description: 'Tag:'
         required: true
         type: string
       release_notes:

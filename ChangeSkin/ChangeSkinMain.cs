@@ -23,6 +23,8 @@ public static class ChangeSkinMain
 
     public static void Init()
     {
+        if (initialized)
+            return;
         if (!KrokoshaScavMultiplayer.network_system_is_running)
         {
             localBody = PlayerCamera.main.body;
