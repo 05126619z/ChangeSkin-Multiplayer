@@ -11,6 +11,7 @@ using HarmonyLib;
 using KrokoshaCasualtiesMP;
 using UnityEngine;
 using UnityEngine.Networking;
+using UnityEngine.SceneManagement;
 using UnityEngine.UIElements;
 using UnityEngine.Video;
 using static UnityEngine.UIElements.UIR.GradientSettingsAtlas;
@@ -40,6 +41,22 @@ namespace ChangeSkin
     //             }
     //         }
     //     }
+
+    /// <summary>
+    /// UUUUUUUUUGLLYYYYYYYYYY
+    /// </summary>
+    [HarmonyPatch(
+        typeof(KrokoshaScavMultiplayer),
+        nameof(KrokoshaScavMultiplayer.KrokoshaOnSceneLoaded)
+    )]
+    internal class KrokoshaScavMultiplayer_Patch_KrokoshaOnSceneLoaded
+    {
+        public static void Postfix(object[] __args)
+        {
+            if (__args[0] is Scene scene && scene.name == "SampleScene")
+                ChangeSkinMain.Init();
+        }
+    }
 
     [HarmonyPatch(typeof(NetBody), nameof(NetBody.OnFoundNetPlayerInitFinish))]
     internal class NetBody_Patch_OnFoundNetPlayerInitFinish

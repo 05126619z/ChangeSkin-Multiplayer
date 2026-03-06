@@ -37,7 +37,7 @@ namespace ChangeSkin
             {
                 Logger.LogError(e);
             }
-            WorldgenPatches.OnWorldgenFinish += ChangeSkinMain.Init;
+            // WorldgenPatches.OnWorldgenFinish += ChangeSkinMain.Init; // krok you piece of shit
             Logger.LogInfo($"Plugin {ModName} is loaded!");
         }
 

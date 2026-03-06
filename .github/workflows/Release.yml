@@ -6,12 +6,8 @@ name: Release
 on: 
   workflow_dispatch:
     inputs:
-      game_version:
+      tag:
         description: 'To what version of the game are you releasing it?'
-        required: true
-        type: string
-      version:
-        description: 'Release version (e.g., v1.0.0):'
         required: true
         type: string
       release_notes:
@@ -94,10 +90,10 @@ jobs:
     - name: Create Release for 
       run: |
         Compress-Archive -Path ${{ env.MODS_PATH }}\* -DestinationPath ".\${{ env.MOD_NAME }}-${{ matrix.platform }}.zip"
-        gh release create "${{ github.event.inputs.version }}.gv${{ github.event.inputs.game_version }}" --notes="${{ github.event.inputs.release_notes }}" --title="${{ github.event.inputs.version }}.gv${{ github.event.inputs.game_version }}"
-        gh release upload "${{ github.event.inputs.version }}.gv${{ github.event.inputs.game_version }}" .\${{ env.MOD_NAME }}-${{ matrix.platform }}.zip
-        if ('${{ github.event.inputs.is_draft }}' -eq 'true') {gh release edit ${{ github.event.inputs.version }} --draft}
-        if ('${{ github.event.inputs.is_prerelease }}' -eq 'true') {gh release edit ${{ github.event.inputs.version }} --prerelease}
+        gh release create "${{ github.event.inputs.tag }}" --notes="${{ github.event.inputs.release_notes }}" --title="${{ github.event.inputs.tag }}"
+        gh release upload "${{ github.event.inputs.tag }}" .\${{ env.MOD_NAME }}-${{ matrix.platform }}.zip
+        if ('${{ github.event.inputs.is_draft }}' -eq 'true') {gh release edit ${{ github.event.inputs.tag }} --draft}
+        if ('${{ github.event.inputs.is_prerelease }}' -eq 'true') {gh release edit ${{ github.event.inputs.tag }} --prerelease}
       
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
