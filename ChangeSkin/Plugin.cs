@@ -37,7 +37,7 @@ namespace ChangeSkin
             {
                 Logger.LogError(e);
             }
-            ScavWorldMap.OnWorldgenFinish += ChangeSkinMain.Init;
+            WorldgenPatches.OnWorldgenFinish += ChangeSkinMain.Init;
             Logger.LogInfo($"Plugin {ModName} is loaded!");
         }
 

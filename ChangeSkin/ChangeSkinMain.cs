@@ -34,7 +34,7 @@ public static class ChangeSkinMain
         {
             ChangeSkinNetworkComponent.RegisterServerRecievers();
             ChangeSkinNetworkComponent.RegisterClientRecievers();
-            foreach (NetPlayer scavClientInstance in ServerMain.GetAllLivingPlayers())
+            foreach (NetPlayer scavClientInstance in ServerMain.GetAllNetPlayers())
             {
                 playerBodies.Add(scavClientInstance.playerbody);
                 ChangeBody changeBody =
