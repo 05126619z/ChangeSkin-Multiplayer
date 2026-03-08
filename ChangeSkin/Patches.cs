@@ -45,15 +45,12 @@ namespace ChangeSkin
     /// <summary>
     /// UUUUUUUUUGLLYYYYYYYYYY
     /// </summary>
-    [HarmonyPatch(
-        typeof(KrokoshaScavMultiplayer),
-        nameof(KrokoshaScavMultiplayer.KrokoshaOnSceneLoaded)
-    )]
-    internal class KrokoshaScavMultiplayer_Patch_KrokoshaOnSceneLoaded
+    [HarmonyPatch(typeof(WorldGeneration), nameof(WorldGeneration.Update))]
+    internal class WorldGeneration_Patch_Update
     {
         public static void Postfix(object[] __args)
         {
-            if (__args[0] is Scene scene && scene.name == "SampleScene")
+            if (WorldGeneration.world.worldExists && !ChangeSkinMain.initialized)
                 ChangeSkinMain.Init();
         }
     }
