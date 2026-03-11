@@ -25,6 +25,7 @@ public static class ChangeSkinMain
     {
         if (initialized)
             return;
+        TextureStorage.SaveOGSprites();
         if (!KrokoshaScavMultiplayer.network_system_is_running)
         {
             localBody = PlayerCamera.main.body;
@@ -94,6 +95,7 @@ public static class ChangeSkinMain
         localPlayerBody = null;
         localBody = null;
         localChangeBody = null;
+        TextureStorage.OgSprites = null;
     }
 
     public static void SkinSelectLocal(ChangeBody changeBody, string skinName)

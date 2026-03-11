@@ -15,23 +15,7 @@ namespace ChangeSkin
         private static Dictionary<string, Sprite> _ogSprites;
         private static readonly object _lock = new object();
 
-        public static Dictionary<string, Sprite> OgSprites
-        {
-            get
-            {
-                if (_ogSprites == null)
-                {
-                    lock (_lock)
-                    {
-                        if (_ogSprites == null)
-                        {
-                            SaveOGSprites();
-                        }
-                    }
-                }
-                return _ogSprites;
-            }
-        }
+        public static Dictionary<string, Sprite> OgSprites;
 
         private static void SaveOGSprite(string filename)
         {
@@ -41,13 +25,14 @@ namespace ChangeSkin
             _ogSprites.Add(sprite.name, sprite);
         }
 
-        private static void SaveOGSprites()
+        public static void SaveOGSprites()
         {
             _ogSprites = [];
             foreach (string filename in ogBodySpriteFilenames)
             {
                 SaveOGSprite(filename);
             }
+            OgSprites = _ogSprites;
         }
 
         internal static readonly string[] ogBodySpriteFilenames =
