@@ -68,7 +68,7 @@ namespace ChangeSkin
         public static void Postfix(NetBody __instance)
         {
             if (
-                !ChangeSkinMain.replacers.ContainsKey(__instance.clientId)
+                !ChangeSkinMain.replacers.ContainsKey(__instance.player.clientId)
                 && !ChangeSkinMain.playerBodies.Contains(__instance)
                 && ChangeSkinMain.initialized
             )
@@ -83,7 +83,7 @@ namespace ChangeSkin
                     changeBody = __instance.body.gameObject.GetComponent<ChangeBody>();
                 }
                 ChangeSkinMain.playerBodies.Add(__instance);
-                ChangeSkinMain.replacers.Add(__instance.clientId, changeBody);
+                ChangeSkinMain.replacers.Add(__instance.player.clientId, changeBody);
             }
         }
     }
@@ -94,7 +94,7 @@ namespace ChangeSkin
         public static void Prefix(NetBody __instance)
         {
             ChangeSkinMain.playerBodies.Remove(__instance);
-            ChangeSkinMain.replacers.Remove(__instance.clientId);
+            ChangeSkinMain.replacers.Remove(__instance.player.clientId);
         }
     }
 

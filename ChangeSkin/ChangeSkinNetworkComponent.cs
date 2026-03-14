@@ -187,7 +187,7 @@ public static class ChangeSkinNetworkComponent
                     reader.ReadValueSafe(out bool state);
                     if (
                         !ChangeSkinMain.replacers[recivedClientId].isBanned
-                        && recivedClientId != ChangeSkinMain.localPlayerBody.clientId
+                        && recivedClientId != ChangeSkinMain.localPlayerBody.player.clientId
                     )
                     {
                         if (state)

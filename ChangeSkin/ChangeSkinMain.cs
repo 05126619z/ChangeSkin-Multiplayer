@@ -25,7 +25,6 @@ public static class ChangeSkinMain
     {
         if (initialized)
             return;
-        TextureStorage.SaveOGSprites();
         if (!KrokoshaScavMultiplayer.network_system_is_running)
         {
             localBody = PlayerCamera.main.body;
@@ -37,7 +36,7 @@ public static class ChangeSkinMain
         {
             ChangeSkinNetworkComponent.RegisterServerRecievers();
             ChangeSkinNetworkComponent.RegisterClientRecievers();
-            foreach (NetPlayer scavClientInstance in ServerMain.GetAllNetPlayers())
+            foreach (NetPlayer scavClientInstance in NetPlayer.ClientIdToPlayerDict.Values)
             {
                 playerBodies.Add(scavClientInstance.playerbody);
                 ChangeBody changeBody =
@@ -46,7 +45,7 @@ public static class ChangeSkinMain
                 {
                     changeBody = scavClientInstance.body.gameObject.AddComponent<ChangeBody>();
                 }
-                replacers.Add(scavClientInstance.playerbody.clientId, changeBody);
+                replacers[scavClientInstance.clientId] = changeBody;
                 if (scavClientInstance == NetPlayer.LOCAL_PLAYER)
                 {
                     changeBody.isLocalChangeBody = true;
@@ -58,6 +57,7 @@ public static class ChangeSkinMain
         }
 
         SceneManager.sceneUnloaded += new UnityAction<Scene>(OnSceneUnloaded);
+        TextureStorage.SaveOGSprites();
 
         switch (Plugin.ModConfig.lastSelected)
         {
