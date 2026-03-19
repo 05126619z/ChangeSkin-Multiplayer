@@ -1,0 +1,140 @@
+{
+  "sprites": [
+    {
+      "name": "experimentTail",
+      "image": "Body/experimentTail.png"
+    },
+    {
+      "name": "experimentFoot",
+      "image": "Body/experimentFoot.png"
+    },
+    {
+      "name": "experimentUpTorso",
+      "image": "Body/experimentUpTorso.png"
+    },
+    {
+      "name": "experimentUpArm",
+      "image": "Body/experimentUpArm.png"
+    },
+    {
+      "name": "experimentThigh",
+      "image": "Body/experimentThigh.png"
+    },
+    {
+      "name": "experimentDownTorso",
+      "image": "Body/experimentDownTorso.png"
+    },
+    {
+      "name": "experimentDownArm",
+      "image": "Body/experimentDownArm.png"
+    },
+    {
+      "name": "experimentCrus",
+      "image": "Body/experimentCrus.png"
+    },
+    {
+      "name": "experimentEyeGoneHealed",
+      "image": "Body/experimentEyeGoneHealed.png"
+    },
+    {
+      "name": "experimentEyeGone",
+      "image": "Body/experimentEyeGone.png"
+    },
+    {
+      "name": "experimentEyeClosed",
+      "image": "Body/experimentEyeClosed.png"
+    },
+    {
+      "name": "experimentEyeScaredBack",
+      "image": "Body/experimentEyeScaredBack.png"
+    },
+    {
+      "name": "experimentEyeScared",
+      "image": "Body/experimentEyeScared.png"
+    },
+    {
+      "name": "experimentEyeSadBack",
+      "image": "Body/experimentEyeSadBack.png"
+    },
+    {
+      "name": "experimentEyeSad",
+      "image": "Body/experimentEyeSad.png"
+    },
+    {
+      "name": "experimentHead",
+      "image": "Body/experimentHead.png"
+    },
+    {
+      "name": "experimentEyePanic",
+      "image": "Body/experimentEyePanic.png"
+    },
+    {
+      "name": "experimentEyeOpen",
+      "image": "Body/experimentEyeOpen.png"
+    },
+    {
+      "name": "experimentEyeLookBack",
+      "image": "Body/experimentEyeLookBack.png"
+    },
+    {
+      "name": "experimentEyeHalfClosedBack",
+      "image": "Body/experimentEyeHalfClosedBack.png"
+    },
+    {
+      "name": "experimentEyeHalfClosed",
+      "image": "Body/experimentEyeHalfClosed.png"
+    },
+    {
+      "name": "experimentHeadDisfigured3Healed",
+      "image": "Body/experimentHeadDisfigured3Healed.png"
+    },
+    {
+      "name": "experimentHeadDisfigured3",
+      "image": "Body/experimentHeadDisfigured3.png"
+    },
+    {
+      "name": "experimentHeadDisfigured2Healed",
+      "image": "Body/experimentHeadDisfigured2Healed.png"
+    },
+    {
+      "name": "experimentHeadDisfigured2",
+      "image": "Body/experimentHeadDisfigured2.png"
+    },
+    {
+      "name": "experimentHeadDisfigured1Healed",
+      "image": "Body/experimentHeadDisfigured1Healed.png"
+    },
+    {
+      "name": "experimentHeadDisfigured1",
+      "image": "Body/experimentHeadDisfigured1.png"
+    },
+    {
+      "name": "experimentHeadBackMouth",
+      "image": "Body/experimentHeadBackMouth.png"
+    },
+    {
+      "name": "experimentHeadBackMouthMini",
+      "image": "Body/experimentHeadBackMouthMini.png"
+    },
+    {
+      "name": "experimentHeadBack",
+      "image": "Body/experimentHeadBack.png"
+    },
+    {
+      "name": "experimentHandB",
+      "image": "Body/experimentHandB.png"
+    },
+    {
+      "name": "experimentHandF",
+      "image": "Body/experimentHandF.png"
+    },
+    {
+      "name": "experimentNosebleed",
+      "image": "Body/experimentNosebleed.png"
+    },
+    {
+      "name": "experimentEyeHappy",
+      "image": "Body/experimentEyeHappy.png"
+    }
+  ]
+}
