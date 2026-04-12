@@ -1,7 +1,8 @@
 using System;
 using System.IO;
-
-namespace ChangeSkin.Core;
+using System.Security.Cryptography;
+using System.Security.Cryptography.X509Certificates;
+using UnityEngine;
 
 [Serializable]
 public class ModConfig
