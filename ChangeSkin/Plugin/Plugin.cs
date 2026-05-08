@@ -9,14 +9,14 @@ using KrokoshaCasualtiesMP;
 using MonoMod.RuntimeDetour;
 using UnityEngine;
 
-namespace ChangeSkin
+namespace ChangeSkinMP
 {
     [BepInPlugin(ModGUID, ModName, ModVersion)]
     public class Plugin : BaseUnityPlugin
     {
         public const string ModGUID = "05126619z.changeskin";
         public const string ModName = "ChangeSkin";
-        public const string ModVersion = "2.2.3";
+        public const string ModVersion = "3.0.0";
 
         internal static new ManualLogSource Logger;
         private readonly Harmony _harmony = new(ModGUID);
@@ -45,5 +45,7 @@ namespace ChangeSkin
         {
             ModConfig.Save(Paths.PluginPath + "/ChangeSkin/settings.json");
         }
+
+        internal class instance { }
     }
 }

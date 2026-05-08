@@ -2,9 +2,10 @@
   <PropertyGroup>
     <TargetFramework>net48</TargetFramework>
     <LangVersion>10.0</LangVersion>
-    <AssemblyName>ChangeSkin</AssemblyName>
+    <AssemblyName>ChangeSkinMP</AssemblyName>
     <Product>Multiplayer for Scav Prototype aka Casualties: Unknown (WIP)</Product>
     <Version>1.0.0</Version>
+    <Nullable>enable</Nullable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <NoWarn>$(NoWarn);0649</NoWarn>
     <LangVersion>latest</LangVersion>
@@ -13,7 +14,7 @@
 			https://nuget.bepinex.dev/v3/index.json;
 			https://nuget.samboy.dev/v3/index.json
 		</RestoreAdditionalProjectSources>
-    <RootNamespace>ChangeSkin</RootNamespace>
+    <RootNamespace>ChangeSkinMP</RootNamespace>
     <Platforms>AnyCPU;x64;x86</Platforms>
   </PropertyGroup>
 
@@ -31,6 +32,9 @@
     <PackageReference Include="UnityEngine.Modules" Version="2022.3.62" IncludeAssets="compile" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" IncludeAssets="compile" />
     <PackageReference Include="System.Net.Http" Version="4.3.4" />
+    <PackageReference Include="Clap.Net" Version="0.1.17-beta" />
+    <PackageReference Include="System.IO.Compression" Version="4.3.0" />
+    <PackageReference Include="System.Memory" Version="4.6.3" />
 
     <Reference Include="Assembly-CSharp" Publicize="true">
       <HintPath>$(GameAssembliesDir)/Assembly-CSharp.dll</HintPath>
@@ -45,23 +49,11 @@
     </Reference>
 
     <Reference Include="KrokoshaCasualtiesMP" Publicize="true">
-      <HintPath>redist/KrokoshaCasualtiesMP.dll</HintPath>
+      <HintPath>redist/KrokMP/KrokoshaCasualtiesMP.dll</HintPath>
     </Reference>
 
-    <Reference Include="Unity.Netcode.Components">
-      <HintPath>redist/Unity.Netcode.Components.dll</HintPath>
-    </Reference>
-
-    <Reference Include="Unity.Netcode.Runtime">
-      <HintPath>redist/Unity.Netcode.Runtime.dll</HintPath>
-    </Reference>
-
-    <Reference Include="Unity.Networking.Transport">
-      <HintPath>redist/Unity.Networking.Transport.dll</HintPath>
-    </Reference>
-
-    <Reference Include="OpusSharp.Core">
-      <HintPath>redist/OpusSharp.Core.dll</HintPath>
+    <Reference Include="LiteNetLib" Publicize="true">
+      <HintPath>redist/KrokMP/LiteNetLib.dll</HintPath>
     </Reference>
   </ItemGroup>
 

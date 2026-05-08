@@ -16,7 +16,7 @@ using UnityEngine.UIElements;
 using UnityEngine.Video;
 using static UnityEngine.UIElements.UIR.GradientSettingsAtlas;
 
-namespace ChangeSkin
+namespace ChangeSkinMP
 {
     //     [HarmonyPatch(typeof(PlayerBody))]
     //     internal class PlayerBody_Patch1
@@ -42,59 +42,21 @@ namespace ChangeSkin
     //         }
     //     }
 
-    /// <summary>
-    /// UUUUUUUUUGLLYYYYYYYYYY
-    /// </summary>
-    [HarmonyPatch(
-        typeof(KrokoshaScavMultiplayer),
-        nameof(KrokoshaScavMultiplayer.KrokoshaOnSceneLoaded)
-    )]
-    internal class KrokoshaScavMultiplayer_Patch_KrokoshaOnSceneLoaded
-    {
-        public static void Postfix(object[] __args)
-        {
-            if (
-                __args[0] is Scene scene
-                && scene.name == "SampleScene"
-                && !ChangeSkinMain.initialized
-            )
-                ChangeSkinMain.Init();
-        }
-    }
-
-    [HarmonyPatch(typeof(NetBody), nameof(NetBody.OnFoundNetPlayerInitFinish))]
-    internal class NetBody_Patch_OnFoundNetPlayerInitFinish
+    [HarmonyPatch(typeof(NetBody), nameof(NetBody.CreateNewNPC))]
+    internal class NetBody_Patch_CreateNewNPC
     {
         public static void Postfix(NetBody __instance)
         {
-            if (
-                !ChangeSkinMain.replacers.ContainsKey(__instance.player.clientId)
-                && !ChangeSkinMain.playerBodies.Contains(__instance)
-                && ChangeSkinMain.initialized
-            )
-            {
-                ChangeBody changeBody;
-                if (__instance.body.gameObject.GetComponent<ChangeBody>() == null)
-                {
-                    changeBody = __instance.body.gameObject.AddComponent<ChangeBody>();
-                }
-                else
-                {
-                    changeBody = __instance.body.gameObject.GetComponent<ChangeBody>();
-                }
-                ChangeSkinMain.playerBodies.Add(__instance);
-                ChangeSkinMain.replacers.Add(__instance.player.clientId, changeBody);
-            }
+            NetworkRegistry.RegisterConnected(__instance);
         }
     }
 
-    [HarmonyPatch(typeof(NetBody), nameof(NetBody.OnDestroy))]
-    internal class NetBody_Patch_OnDestroy
+    [HarmonyPatch(typeof(NetBody), nameof(NetBody.DestroyNPC))]
+    internal class NetBody_Patch_DestroyNPC
     {
-        public static void Prefix(NetBody __instance)
+        public static void Prefix(NetBody instance)
         {
-            ChangeSkinMain.playerBodies.Remove(__instance);
-            ChangeSkinMain.replacers.Remove(__instance.player.clientId);
+            NetworkRegistry.RegisterDisconnected(instance);
         }
     }
 
@@ -109,7 +71,7 @@ namespace ChangeSkin
                     "Control command for ChangeSkin",
                     delegate(string[] args)
                     {
-                        string output = ChangeSkinMain.ToggleReplacement(args);
+                        string output = SkinManager.ToggleReplacement(args);
                         ConsoleScript.instance.LogToConsole(output);
                         // Plugin.Logger.LogInfo(output);
                     },
@@ -126,9 +88,9 @@ namespace ChangeSkin
     {
         public static bool Prefix(ConsoleScript __instance, string[] args, bool addToLog)
         {
-            if (args.Length > 0 && args[0] == "skin")
+            if (args[0] == "skin")
             {
-                string output = ChangeSkinMain.ToggleReplacement(args);
+                string output = SkinManager.ToggleReplacement(args);
                 __instance.LogToConsole(output);
                 __instance.AddCommandToLogAndClearInput();
                 return false;

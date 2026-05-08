@@ -10,10 +10,11 @@ using System.Net.Http.Headers;
 using System.Security.Cryptography;
 using System.Text;
 using BepInEx;
+using OneOf.Types;
 using UnityEngine;
 using UnityEngine.Networking;
 
-namespace ChangeSkin;
+namespace ChangeSkinMP;
 
 internal static class SkinLoader
 {
@@ -125,36 +126,6 @@ internal static class SkinLoader
         );
     }
 
-    internal static string UploadLocal(string skinName, string uploadUrl)
-    {
-        string workPath = Path.GetTempPath() + "/ChangeSkin/zips/local";
-        string filePath = workPath + $"/{skinName}.zip";
-        Uri uri = new(uploadUrl);
-        byte[] fileBytes = File.ReadAllBytes(filePath);
-        using (HttpClient client = new HttpClient())
-        using (var formData = new MultipartFormDataContent())
-        {
-            var fileContent = new ByteArrayContent(fileBytes);
-            fileContent.Headers.ContentType = new MediaTypeHeaderValue("application/zip");
-            formData.Add(fileContent, "file", Path.GetFileName(filePath));
-            HttpResponseMessage response = client.PostAsync(uploadUrl, formData).Result;
-
-            if (response.StatusCode == HttpStatusCode.Created)
-            {
-                string result = response.Headers.GetValues("Location").FirstOrDefault();
-                Plugin.Logger.LogInfo(result);
-                return result;
-            }
-            else
-            {
-                Plugin.Logger.LogWarning(
-                    "Bad response from server: " + response.Content.ReadAsStringAsync().Result
-                );
-            }
-        }
-        return null;
-    }
-
     public static string DownloadRemote(string url)
     {
         string workPath = Path.GetTempPath() + "/ChangeSkin/zips/remote";
@@ -187,6 +158,68 @@ internal static class SkinLoader
         }
 
         return Path.GetFileNameWithoutExtension(fileName);
+    }
+
+    public static byte[] DownloadURLBytes(Uri uri)
+    {
+        using (var client = new HttpClient())
+        {
+            return client.GetByteArrayAsync(uri).GetAwaiter().GetResult();
+        }
+    }
+
+    // Для URI — скачали zip, распаковали
+    public static Dictionary<string, Sprite> ParseSpriteSheet(byte[] zipData)
+    {
+        using var zip = new ZipArchive(new MemoryStream(zipData), ZipArchiveMode.Read);
+        return ParseEntries(zip.Entries);
+    }
+
+    // Для локальных файлов — читаем папку напрямую, без промежуточного zip
+    public static byte[] LoadLocalBytes(string name)
+    {
+        string folder = Path.Combine(Paths.PluginPath, "ChangeSkin", "resources", name);
+
+        if (!Directory.Exists(folder))
+            throw new DirectoryNotFoundException($"Skin folder not found: {folder}");
+
+        // Пакуем в zip в памяти — формат единый для всех путей
+        using var ms = new MemoryStream();
+
+        using (var zip = new ZipArchive(ms, ZipArchiveMode.Create, leaveOpen: true))
+        {
+            foreach (string file in Directory.EnumerateFiles(folder, "*.png"))
+            {
+                ZipArchiveEntry entry = zip.CreateEntry(Path.GetFileName(file));
+                using Stream entryStream = entry.Open();
+                using FileStream fs = File.OpenRead(file);
+                fs.CopyTo(entryStream);
+            }
+        } // zip.Dispose() здесь — финализирует запись в ms
+
+        return ms.ToArray();
+    }
+
+    // Общая внутренняя логика разбора
+    private static Dictionary<string, Sprite> ParseEntries(IEnumerable<ZipArchiveEntry> entries)
+    {
+        var sprites = new Dictionary<string, Sprite>();
+
+        foreach (var entry in entries)
+        {
+            if (entry.Name.Length == 0 || !entry.Name.EndsWith(".png"))
+                continue;
+
+            using var ms = new MemoryStream();
+            using (Stream s = entry.Open())
+                s.CopyTo(ms);
+
+            Sprite sprite = Utils.LoadSprite(ms.ToArray());
+            if (sprite != null)
+                sprites[sprite.name] = sprite;
+        }
+
+        return sprites;
     }
 
     public static void UnpackRemote(string archiveName)

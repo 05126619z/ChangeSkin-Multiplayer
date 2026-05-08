@@ -7,6 +7,7 @@ using UnityEngine;
 [Serializable]
 public class ModConfig
 {
+    // public string uploadApiUrl = "https://skin.cat-bot.de/ots";
     public enum LastSelected : byte
     {
         Local,
@@ -26,7 +27,7 @@ public class ModConfig
         File.WriteAllText(filePath, json);
     }
 
-    public static ModConfig Load(string filePath)
+    public static ModConfig? Load(string filePath)
     {
         if (!File.Exists(filePath))
         {
