@@ -20,7 +20,6 @@ namespace ChangeSkinMP
 
         internal static new ManualLogSource Logger;
         private readonly Harmony _harmony = new(ModGUID);
-        public static ModConfig ModConfig;
         public static Plugin Instance { get; private set; } = null!;
         public static GameObject SingletonObject;
 
@@ -28,7 +27,6 @@ namespace ChangeSkinMP
         {
             Logger = base.Logger;
             Instance = this;
-            ModConfig = ModConfig.Load(Paths.PluginPath + "/ChangeSkin/settings.json");
             try
             {
                 _harmony.PatchAll();
@@ -40,12 +38,5 @@ namespace ChangeSkinMP
             // WorldgenPatches.OnWorldgenFinish += ChangeSkinMain.Init; // krok you piece of shit
             Logger.LogInfo($"Plugin {ModName} is loaded!");
         }
-
-        public void SaveConfig()
-        {
-            ModConfig.Save(Paths.PluginPath + "/ChangeSkin/settings.json");
-        }
-
-        internal class instance { }
     }
 }

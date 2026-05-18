@@ -26,12 +26,12 @@ namespace ChangeSkinMP
             OwnerID = _netBody.netId;
             NBody = _netBody;
             foreach (
-                SpriteRenderer spriteRenderer in gameObject.GetComponentsInChildren<SpriteRenderer>()
+                SpriteRenderer spriteRenderer in NBody.body.gameObject.GetComponentsInChildren<SpriteRenderer>()
             )
             {
                 foreach (string name in names)
                 {
-                    if (spriteRenderer.name == name)
+                    if (spriteRenderer.sprite.name == name)
                         spriteRenderers.Add(spriteRenderer);
                 }
             }
@@ -43,11 +43,16 @@ namespace ChangeSkinMP
             if (wasWorking)
                 RepEnd();
             Skin = _skin;
+            foreach (SpriteReplacer replacer in spriteReplacers)
+            {
+                replacer.Restore();
+            }
+            spriteReplacers.Clear();
             foreach (KeyValuePair<string, Sprite> keyValuePair in Skin.BodySprites)
             {
                 foreach (SpriteRenderer spriteRenderer in spriteRenderers)
                 {
-                    if (spriteRenderer.name == keyValuePair.Key)
+                    if (spriteRenderer.sprite.name == keyValuePair.Key)
                     {
                         SpriteReplacer spriteReplacer = SpriteReplacer.Attach(
                             spriteRenderer,
@@ -76,7 +81,6 @@ namespace ChangeSkinMP
             {
                 spriteReplacer.Restore();
             }
-            spriteReplacers.Clear();
             Working = false;
         }
 

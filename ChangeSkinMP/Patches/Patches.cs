@@ -42,8 +42,8 @@ namespace ChangeSkinMP
     //         }
     //     }
 
-    [HarmonyPatch(typeof(NetBody), nameof(NetBody.CreateNewNPC))]
-    internal class NetBody_Patch_CreateNewNPC
+    [HarmonyPatch(typeof(NetBody), nameof(NetBody.Start))]
+    internal class NetBody_Patch_Start
     {
         public static void Postfix(NetBody __instance)
         {
@@ -54,9 +54,9 @@ namespace ChangeSkinMP
     [HarmonyPatch(typeof(NetBody), nameof(NetBody.DestroyNPC))]
     internal class NetBody_Patch_DestroyNPC
     {
-        public static void Prefix(NetBody instance)
+        public static void Prefix(NetBody __instance)
         {
-            NetworkRegistry.RegisterDisconnected(instance);
+            NetworkRegistry.RegisterDisconnected(__instance);
         }
     }
 
@@ -71,7 +71,7 @@ namespace ChangeSkinMP
                     "Control command for ChangeSkin",
                     delegate(string[] args)
                     {
-                        string output = SkinManager.ToggleReplacement(args);
+                        string output = ArgsParser.Execute(args);
                         ConsoleScript.instance.LogToConsole(output);
                         // Plugin.Logger.LogInfo(output);
                     },
@@ -82,20 +82,20 @@ namespace ChangeSkinMP
         }
     }
 
-    [HarmonyPatch(typeof(ConsoleScript), nameof(ConsoleScript.TryExecuteCommand))]
-    [HarmonyPriority(300)] // Hijack this shit from krok's thing
-    internal class ConsoleScript_Patch_TryExecuteCommand
-    {
-        public static bool Prefix(ConsoleScript __instance, string[] args, bool addToLog)
-        {
-            if (args[0] == "skin")
-            {
-                string output = SkinManager.ToggleReplacement(args);
-                __instance.LogToConsole(output);
-                __instance.AddCommandToLogAndClearInput();
-                return false;
-            }
-            return true;
-        }
-    }
+    // [HarmonyPatch(typeof(ConsoleScript), nameof(ConsoleScript.TryExecuteCommand))]
+    // [HarmonyPriority(300)] // Hijack this shit from krok's thing
+    // internal class ConsoleScript_Patch_TryExecuteCommand
+    // {
+    //     public static bool Prefix(ConsoleScript __instance, string[] args, bool addToLog)
+    //     {
+    //         if (args[0] == "skin")
+    //         {
+    //             string output = SkinManager.Execute(args);
+    //             __instance.LogToConsole(output);
+    //             __instance.AddCommandToLogAndClearInput();
+    //             return false;
+    //         }
+    //         return true;
+    //     }
+    // }
 }

@@ -21,10 +21,11 @@ public sealed class SkinObject : INetSerializable
 
     public SkinObject() { }
 
-    private SkinObject(SkinMeta skinMeta, Dictionary<string, Sprite> sprites)
+    private SkinObject(SkinMeta skinMeta, Dictionary<string, Sprite> sprites, byte[] zipBytes)
     {
         Meta = skinMeta;
         BodySprites = sprites;
+        _zipBytes = zipBytes;
     }
 
     public void Serialize(NetDataWriter writer)
@@ -58,27 +59,46 @@ public sealed class SkinObject : INetSerializable
         return FromZipBytes(null, data);
     }
 
-    public static SkinObject LoadFromLocal(string name)
+    public static SkinObject? LoadFromLocal(string name)
     {
-        byte[] data =
-            ReadLocalZip(name) // уже готовый .zip
-            ?? PackLocalFolder(name); // или папка с PNG
+        string folder = SkinRoot(name);
+
+        byte[]? data = ReadLocalZip(name) ?? PackLocalFolder(name);
 
         if (data == null)
             throw new FileNotFoundException($"Skin not found: {name}");
 
-        return FromZipBytes(name, data);
+        return FromZipBytes(name, data, saveMetaBack: true, folderPath: folder);
     }
 
-    private static SkinObject FromZipBytes(string? name, byte[] data)
+    private static SkinObject FromZipBytes(
+        string? name,
+        byte[] data,
+        bool saveMetaBack = false,
+        string? folderPath = null
+    )
     {
         using var zip = new ZipArchive(new MemoryStream(data), ZipArchiveMode.Read);
 
-        SkinMeta meta = SkinMeta.TryParseMeta(zip) ?? SkinMeta.CreateLegacy(name ?? "unknown"); // легаси — генерируем дефолт
+        bool metaWasGenerated = false;
+        SkinMeta meta = SkinMeta.TryParseMeta(zip);
+        if (meta == null)
+        {
+            meta = SkinMeta.CreateLegacy(name ?? "unknown");
+            metaWasGenerated = true;
+        }
 
         Dictionary<string, Sprite> sprites = ParseSprites(zip.Entries);
 
-        return new SkinObject(meta, sprites);
+        // Сохраняем meta.json на диск если его не было
+        if (saveMetaBack && metaWasGenerated && folderPath != null)
+        {
+            string metaPath = Path.Combine(folderPath, "meta.json");
+            File.WriteAllText(metaPath, JsonConvert.SerializeObject(meta, Formatting.Indented));
+            Plugin.Logger.LogInfo($"Saved meta.json to {metaPath}");
+        }
+
+        return new SkinObject(meta, sprites, data);
     }
 
     private static Dictionary<string, Sprite> ParseSprites(IEnumerable<ZipArchiveEntry> entries)
@@ -87,23 +107,28 @@ public sealed class SkinObject : INetSerializable
 
         foreach (var entry in entries)
         {
+            Plugin.Logger.LogInfo($"Entry: {entry.Name}");
             if (entry.Name.Length == 0 || !entry.Name.EndsWith(".png"))
+            {
+                Plugin.Logger.LogInfo($"Skipped: {entry.Name}");
                 continue;
+            }
 
             using var ms = new MemoryStream();
             using (Stream s = entry.Open())
                 s.CopyTo(ms);
 
+            string spriteName = Path.GetFileNameWithoutExtension(entry.Name);
             Sprite sprite = Utils.LoadSprite(ms.ToArray());
             if (sprite != null)
-                sprites[sprite.name] = sprite;
+                sprites[spriteName] = sprite;
         }
-
+        Plugin.Logger.LogInfo($"Parsed {sprites.Count} sprites");
         return sprites;
     }
 
     private static string SkinRoot(string name) =>
-        Path.Combine(Paths.PluginPath, "ChangeSkin", "resources", name);
+        Path.Combine(Paths.PluginPath, "ChangeSkinMP", "resources", name);
 
     // Вариант 1: уже лежит готовый .zip
     private static byte[]? ReadLocalZip(string name)
@@ -116,22 +141,31 @@ public sealed class SkinObject : INetSerializable
     private static byte[]? PackLocalFolder(string name)
     {
         string folder = SkinRoot(name);
+        Plugin.Logger.LogInfo($"Skin folder: {folder}");
+        Plugin.Logger.LogInfo($"Exists: {Directory.Exists(folder)}");
+
         if (!Directory.Exists(folder))
             return null;
+
+        var pngs = Directory.EnumerateFiles(folder, "*.png", SearchOption.AllDirectories).ToList();
+        Plugin.Logger.LogInfo($"PNGs found: {pngs.Count}");
+        foreach (var png in pngs)
+            Plugin.Logger.LogInfo($"  {png}");
 
         using var ms = new MemoryStream();
         using (var zip = new ZipArchive(ms, ZipArchiveMode.Create, leaveOpen: true))
         {
-            // meta.json если есть
             string metaPath = Path.Combine(folder, "meta.json");
             if (File.Exists(metaPath))
                 AddFileToZip(zip, metaPath, "meta.json");
 
-            foreach (string png in Directory.EnumerateFiles(folder, "*.png"))
+            foreach (string png in pngs)
                 AddFileToZip(zip, png, Path.GetFileName(png));
         }
 
-        return ms.ToArray();
+        byte[] result = ms.ToArray();
+        Plugin.Logger.LogInfo($"Zip size: {result.Length} bytes");
+        return result;
     }
 
     private static void AddFileToZip(ZipArchive zip, string filePath, string entryName)

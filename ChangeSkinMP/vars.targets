@@ -4,6 +4,6 @@
     <BaseGamePath>/home/ssd/.var/app/com.valvesoftware.Steam/.local/share/Steam/steamapps/common/Casualties Unknown Demo/</BaseGamePath>
     <BepInExDir>$(BaseGamePath)/BepInEx</BepInExDir>
     <GameAssembliesDir>$(BaseGamePath)/CasualtiesUnknown_Data/Managed</GameAssembliesDir>
-    <PluginDirName>ChangeSkin</PluginDirName>
+    <PluginDirName>ChangeSkinMP</PluginDirName>
   </PropertyGroup>
 </Project>

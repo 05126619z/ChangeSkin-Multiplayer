@@ -4,34 +4,36 @@ namespace ChangeSkinMP;
 
 public class RemoteSkinController : MonoBehaviour
 {
-    private ChangeBody _body;
+    public ChangeBody CBody { get; private set; }
     public bool Banned { get; private set; }
 
     private void Awake()
     {
-        _body = GetComponent<ChangeBody>();
+        CBody = GetComponent<ChangeBody>();
     }
 
     public void SetSkin(SkinObject skin)
     {
-        _body.ApplySkin(skin);
+        CBody.ApplySkin(skin);
     }
+
+    public void RequestSkin() { }
 
     public void Enable()
     {
         if (Banned)
             return;
-        _body.RepStart();
+        CBody.RepStart();
     }
 
     public void Disable()
     {
-        _body.RepEnd();
+        CBody.RepEnd();
     }
 
     public void OnBanReceived(bool banned)
     {
         Banned = banned;
-        _body.RepEnd();
+        CBody.RepEnd();
     }
 }

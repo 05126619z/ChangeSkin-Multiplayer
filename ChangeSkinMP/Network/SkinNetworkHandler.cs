@@ -21,20 +21,20 @@ public class SkinNetworkHandler : MonoBehaviour
         if (Net.is_server)
         {
             Net.RegisterServerReciever((ushort)Messages.SendSkinMessage, Server_HandleSkinMessage);
-            Net.RegisterServerReciever(
-                (ushort)Messages.RequestSkinMessage,
-                Server_HandleSkinRequest
-            );
+            // Net.RegisterServerReciever(
+            //     (ushort)Messages.RequestSkinMessage,
+            //     Server_HandleSkinRequest
+            // );
         }
 
         if (Net.is_client_or_host)
         {
             Net.RegisterClientReciever((ushort)Messages.SendSkinMessage, Client_HandleSkinMessage);
-            Net.RegisterClientReciever(
-                (ushort)Messages.RequestSkinMessage,
-                Client_HandleSkinRequest
-            );
-            Net.RegisterClientReciever((ushort)Messages.SkinBanMessage, Client_HandleBanMessage);
+            // Net.RegisterClientReciever(
+            //     (ushort)Messages.RequestSkinMessage,
+            //     Client_HandleSkinRequest
+            // );
+            // Net.RegisterClientReciever((ushort)Messages.SkinBanMessage, Client_HandleBanMessage);
         }
     }
 
@@ -70,11 +70,11 @@ public class SkinNetworkHandler : MonoBehaviour
             return;
         }
 
-        if (BanList.Contains(senderClientId))
+        if (BanList.Contains(NetworkRegistry.Get(senderClientId).PlayerInfo))
             return;
 
         // Применяем на хосте
-        NetworkRegistry.GetById(ownerId)?.GetComponent<RemoteSkinController>()?.SetSkin(skin);
+        NetworkRegistry.Get(ownerId).SkinController.SetSkin(skin);
 
         // Ретранслируем остальным клиентам
         NetDataWriter writer = new();
@@ -90,23 +90,16 @@ public class SkinNetworkHandler : MonoBehaviour
         var skin = new SkinObject();
         skin.Deserialize(reader);
 
-        NetworkRegistry.GetById(ownerId)?.GetComponent<RemoteSkinController>()?.SetSkin(skin);
+        NetworkRegistry.Get(ownerId)?.SkinController.SetSkin(skin);
     }
 
-    private void Server_HandleSkinRequest(uint senderClientId, ref NetDataReader reader) { }
+    // private void Client_HandleBanMessage(uint _, ref NetDataReader reader)
+    // {
+    //     uint clientId = reader.GetUInt();
+    //     bool banned = reader.GetBool();
 
-    private void Client_HandleSkinRequest(uint _, ref NetDataReader reader) { }
-
-    private void Client_HandleBanMessage(uint _, ref NetDataReader reader)
-    {
-        uint clientId = reader.GetUInt();
-        bool banned = reader.GetBool();
-
-        NetworkRegistry
-            .GetById(clientId)
-            ?.GetComponent<RemoteSkinController>()
-            ?.OnBanReceived(banned);
-    }
+    //     NetworkRegistry.Get(clientId).SkinController.OnBanReceived(banned);
+    // }
 
     // private void HandleSkinMessage(uint senderClientId, NetDataReader reader)
     // {

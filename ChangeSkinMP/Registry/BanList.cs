@@ -14,20 +14,19 @@ public static class BanList
     private static readonly HashSet<PlayerInfo> _banned = new();
     private static readonly string _savePath = Path.Combine(
         Paths.PluginPath,
-        "ChangeSkin",
+        "ChangeSkinMP",
         "skinbans.json"
     );
 
     public static bool Contains(PlayerInfo player) => _banned.Contains(player);
-
-    public static bool Contains(uint id) => _banned.Any(p => p.ClientId == id);
 
     // Вызывается только на сервере
     public static void Ban(PlayerInfo player)
     {
         _banned.Add(player);
         Save();
-
+        NetworkRegistryEntry networkRegistryEntry = NetworkRegistry.Get(player);
+        networkRegistryEntry.SkinController.OnBanReceived(true);
         NetDataWriter data = new();
         data.Put(player);
         data.Put(true); // is banned?
@@ -38,7 +37,8 @@ public static class BanList
     {
         _banned.Add(player);
         Save();
-
+        NetworkRegistryEntry networkRegistryEntry = NetworkRegistry.Get(player);
+        networkRegistryEntry.SkinController.OnBanReceived(false);
         NetDataWriter data = new();
         data.Put(player);
         data.Put(false); // is banned?
