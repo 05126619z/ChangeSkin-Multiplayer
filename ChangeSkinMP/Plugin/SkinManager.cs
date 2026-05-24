@@ -7,6 +7,7 @@ using BepInEx;
 using CommandLine;
 using CommandLine.Text;
 using KrokoshaCasualtiesMP;
+using LiteNetLib.Utils;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.SceneManagement;
@@ -20,35 +21,23 @@ public static class SkinManager
 
     static SkinObject PendingSkin;
 
-    public static void Init()
-    {
-        if (initialized)
-            return;
-        SimpleMessage = new(ServerMain.AllClientIdsExceptHost, NetPlayer.LOCAL_PLAYER.clientId);
-        MessageSender.Init(SimpleMessage);
-        SceneManager.sceneUnloaded += new UnityAction<Scene>(OnSceneUnloaded);
-        WorldgenPatches.OnWorldgenFinish += AfterConnection;
-        TryLoadLastSkin();
-
-        initialized = true;
-        ConsoleScript.instance.LogToConsole("ChangeSkin initialized");
-    }
-
     internal static void AfterConnection()
     {
-        foreach (NetBody netBody in NetBody.all_instances)
-        {
-            if (NetworkRegistry.Get(netBody) == null)
-                NetworkRegistry.RegisterConnected(netBody);
-        }
-        if (PendingSkin != null)
-        {
-            NetworkRegistry.LocalPlayerSkinController.SetSkin(PendingSkin);
-            PendingSkin = null;
-        }
+        SimpleMessage = new(ServerMain.AllClientIdsExceptHost, NetPlayer.LOCAL_PLAYER.clientId);
+        MessageSender.Init(SimpleMessage);
+        Cl_SendRegistration();
+        NetworkRegistry.RegisterConnected(NetBody.NetIdToNetBody[NetPlayer.LOCAL_PLAYER.clientId]);
     }
 
-    private static void TryLoadLastSkin()
+    private static void Cl_SendRegistration()
+    {
+        NetDataWriter writer = new();
+        writer.Put(NetPlayer.LOCAL_PLAYER.clientId);
+        writer.Put(NetPlayer.LOCAL_PLAYER.playername);
+        MessageSender.SendToServer(Messages.RegistrationMessage, writer);
+    }
+
+    public static void TryLoadLastSkin()
     {
         string lastSkin = ModConfig.Instance.LastSelectedSkin;
         if (string.IsNullOrEmpty(lastSkin))
@@ -70,7 +59,7 @@ public static class SkinManager
                 Plugin.Logger.LogInfo($"Loaded local skin: {lastSkin}");
             }
 
-            SkinManager.PendingSkin = skin;
+            PendingSkin = skin;
         }
         catch (FileNotFoundException)
         {
@@ -84,7 +73,7 @@ public static class SkinManager
                 try
                 {
                     SkinObject skin = SkinObject.LoadFromUri(new Uri(ModConfig.Instance.LastURL));
-                    SkinManager.PendingSkin = skin;
+                    PendingSkin = skin;
                 }
                 catch (Exception e)
                 {
@@ -103,12 +92,7 @@ public static class SkinManager
         }
     }
 
-    private static void OnSceneUnloaded(Scene scene)
-    {
-        Destructor();
-    }
-
-    public static void Destructor()
+    public static void OnSceneUnloaded(Scene scene)
     {
         NetworkRegistry.Clear();
     }

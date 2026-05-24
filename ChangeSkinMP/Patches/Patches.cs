@@ -47,7 +47,10 @@ namespace ChangeSkinMP
     {
         public static void Postfix(NetBody __instance)
         {
-            NetworkRegistry.RegisterConnected(__instance);
+            if (Net.is_server || __instance.netId == NetPlayer.LOCAL_PLAYER.clientId)
+            {
+                NetworkRegistry.RegisterConnected(__instance);
+            }
         }
     }
 
@@ -81,6 +84,15 @@ namespace ChangeSkinMP
             );
         }
     }
+
+    // [HarmonyPatch(typeof(KrokoshaScavMultiplayer), nameof(KrokoshaScavMultiplayer._FIRST_INIT))]
+    // internal class KrokoshaScavMultiplayer_Patch__FIRST_INIT
+    // {
+    //     public static void Postfix()
+    //     {
+
+    //     }
+    // }
 
     // [HarmonyPatch(typeof(ConsoleScript), nameof(ConsoleScript.TryExecuteCommand))]
     // [HarmonyPriority(300)] // Hijack this shit from krok's thing

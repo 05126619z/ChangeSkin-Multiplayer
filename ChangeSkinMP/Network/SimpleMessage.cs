@@ -30,7 +30,7 @@ public class SimpleMessage
         {
             if (clId == LocalClientID)
                 continue;
-            Net.TRANSPORT.Server_SendTo(DeliveryMethod.ReliableSequenced, n2, clId);
+            Net.TRANSPORT.Server_SendTo(DeliveryMethod.ReliableOrdered, n2, clId);
         }
     }
 
@@ -53,7 +53,7 @@ public class SimpleMessage
         NetDataWriter n2 = new();
         n2.Put(msgID);
         n2.PutBytesWithLength(netDataWriter.Data);
-        Net.TRANSPORT.Server_SendTo(DeliveryMethod.ReliableSequenced, n2, clID);
+        Net.TRANSPORT.Server_SendTo(DeliveryMethod.ReliableOrdered, n2, clID);
     }
 
     public void Cl_SendMsgSrv(uint msgID, NetDataWriter netDataWriter)
@@ -66,6 +66,6 @@ public class SimpleMessage
         NetDataWriter n2 = new();
         n2.Put(msgID);
         n2.PutBytesWithLength(netDataWriter.Data);
-        Net.TRANSPORT.Client_Send(DeliveryMethod.ReliableSequenced, n2);
+        Net.TRANSPORT.Client_Send(DeliveryMethod.ReliableOrdered, n2);
     }
 }

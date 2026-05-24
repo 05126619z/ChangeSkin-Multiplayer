@@ -7,12 +7,14 @@ namespace ChangeSkinMP;
 
 public static class NetworkRegistry
 {
-    static List<NetworkRegistryEntry> _players = new();
-    public static IReadOnlyList<NetworkRegistryEntry> Players => _players.AsReadOnly();
+    static HashSet<NetworkRegistryEntry> _players = new();
+    public static IReadOnlyCollection<NetworkRegistryEntry> Players => _players;
     public static LocalSkinController LocalPlayerSkinController { get; private set; }
 
     public static void RegisterConnected(NetBody netBody)
     {
+        if (Get(netBody) != null)
+            return;
         ChangeBody changeBody = netBody.body.gameObject.AddComponent<ChangeBody>();
         changeBody.Init(netBody);
         RemoteSkinController skinController =
@@ -33,29 +35,27 @@ public static class NetworkRegistry
 
     public static void RegisterDisconnected(NetBody netBody)
     {
-        NetworkRegistryEntry networkRegistryEntry = _players.FirstOrDefault(c =>
-            c.NBody == netBody
-        );
-        networkRegistryEntry.SkinController.Disable();
-        UnityEngine.Object.Destroy(networkRegistryEntry.SkinController.CBody);
-        UnityEngine.Object.Destroy(networkRegistryEntry.SkinController);
+        NetworkRegistryEntry networkRegistryEntry = Get(netBody);
+        networkRegistryEntry?.SkinController.Disable();
+        UnityEngine.Object.Destroy(networkRegistryEntry?.SkinController.CBody);
+        UnityEngine.Object.Destroy(networkRegistryEntry?.SkinController);
     }
 
-    public static NetworkRegistryEntry Get(uint clientId) =>
+    public static NetworkRegistryEntry? Get(uint clientId) =>
         _players.FirstOrDefault(c => c.ClientID == clientId);
 
-    public static NetworkRegistryEntry Get(PlayerInfo playerInfo) =>
+    public static NetworkRegistryEntry? Get(PlayerInfo playerInfo) =>
         _players.FirstOrDefault(c => c.PlayerInfo == playerInfo);
 
-    public static NetworkRegistryEntry Get(string nickname) =>
+    public static NetworkRegistryEntry? Get(string nickname) =>
         _players.FirstOrDefault(e => e.PlayerInfo.Nickname == nickname);
 
-    public static NetworkRegistryEntry Get(NetBody netBody) =>
+    public static NetworkRegistryEntry? Get(NetBody netBody) =>
         _players.FirstOrDefault(e => e.NBody == netBody);
 
     public static void Clear()
     {
-        LocalPlayerSkinController.CBody.RepEnd();
+        LocalPlayerSkinController?.CBody.RepEnd();
         LocalPlayerSkinController = null;
         foreach (NetworkRegistryEntry entry in _players)
         {

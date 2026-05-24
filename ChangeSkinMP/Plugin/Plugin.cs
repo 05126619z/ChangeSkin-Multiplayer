@@ -8,6 +8,8 @@ using HarmonyLib;
 using KrokoshaCasualtiesMP;
 using MonoMod.RuntimeDetour;
 using UnityEngine;
+using UnityEngine.Events;
+using UnityEngine.SceneManagement;
 
 namespace ChangeSkinMP
 {
@@ -35,7 +37,9 @@ namespace ChangeSkinMP
             {
                 Logger.LogError(e);
             }
-            // WorldgenPatches.OnWorldgenFinish += ChangeSkinMain.Init; // krok you piece of shit
+            SceneManager.sceneUnloaded += new UnityAction<Scene>(SkinManager.OnSceneUnloaded);
+            WorldgenPatches.OnWorldgenFinish += SkinManager.AfterConnection;
+            SkinManager.TryLoadLastSkin();
             Logger.LogInfo($"Plugin {ModName} is loaded!");
         }
     }

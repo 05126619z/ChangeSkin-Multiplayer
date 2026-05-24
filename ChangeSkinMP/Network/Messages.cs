@@ -8,7 +8,9 @@ namespace ChangeSkinMP;
 
 public enum Messages : ushort
 {
-    SendSkinMessage = 17000,
+    RegistrationMessage = 17000,
     RequestSkinMessage,
+    SendSkinMessage,
+    RegistrySyncMessage,
     SkinBanMessage,
 }
