@@ -10,7 +10,6 @@ namespace ChangeSkinMP;
 
 public static class BanList
 {
-    // nickname → храним по нику, не по clientId (clientId меняется между сессиями)
     private static readonly HashSet<PlayerInfo> _banned = new();
     private static readonly string _savePath = Path.Combine(
         Paths.PluginPath,
@@ -20,29 +19,30 @@ public static class BanList
 
     public static bool Contains(PlayerInfo player) => _banned.Contains(player);
 
-    // Вызывается только на сервере
+    static BanList() => Load();
+
     public static void Ban(PlayerInfo player)
     {
         _banned.Add(player);
         Save();
         NetworkRegistryEntry networkRegistryEntry = NetworkRegistry.Get(player);
         networkRegistryEntry.SkinController.OnBanReceived(true);
-        NetDataWriter data = new();
+        NetDataWriter data = Net.CreateWriter((ushort)Messages.SkinBanMessage);
         data.Put(player);
-        data.Put(true); // is banned?
-        MessageSender.SendToAll(Messages.SkinBanMessage, data);
+        data.Put(true);
+        MessageSender.SendToAll(data);
     }
 
     public static void Unban(PlayerInfo player)
     {
-        _banned.Add(player);
+        _banned.Remove(player);
         Save();
         NetworkRegistryEntry networkRegistryEntry = NetworkRegistry.Get(player);
         networkRegistryEntry.SkinController.OnBanReceived(false);
-        NetDataWriter data = new();
+        NetDataWriter data = Net.CreateWriter((ushort)Messages.SkinBanMessage);
         data.Put(player);
-        data.Put(false); // is banned?
-        MessageSender.SendToAll(Messages.SkinBanMessage, data);
+        data.Put(false);
+        MessageSender.SendToAll(data);
     }
 
     private static void Save() =>

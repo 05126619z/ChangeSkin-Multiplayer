@@ -1,12 +1,10 @@
 ﻿using System;
-using System.Collections;
 using System.IO;
 using System.Reflection;
 using BepInEx;
 using BepInEx.Logging;
 using HarmonyLib;
 using KrokoshaCasualtiesMP;
-using MonoMod.RuntimeDetour;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.SceneManagement;
@@ -39,6 +37,8 @@ namespace ChangeSkinMP
             }
             SceneManager.sceneUnloaded += new UnityAction<Scene>(SkinManager.OnSceneUnloaded);
             WorldgenPatches.OnWorldgenFinish += SkinManager.AfterConnection;
+            NetPlayer.OnPlayerLeft += SkinManager.OnPlayerLeft;
+            ModConfig.Load();
             SkinManager.TryLoadLastSkin();
             Logger.LogInfo($"Plugin {ModName} is loaded!");
         }

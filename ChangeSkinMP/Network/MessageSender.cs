@@ -1,26 +1,38 @@
+using System.Collections.Generic;
+using KrokoshaCasualtiesMP;
+using LiteNetLib;
 using LiteNetLib.Utils;
 
 namespace ChangeSkinMP;
 
 public static class MessageSender
 {
-    private static SimpleMessage _simple;
-
-    // Инициализируется один раз при старте
-    public static void Init(SimpleMessage simple) => _simple = simple;
-
-    public static void SendToAll(this Messages msg, NetDataWriter payload)
+    public static void SendToAll(NetDataWriter writer)
     {
-        _simple.Srv_SendMsgAll((uint)msg, payload);
+        if (!Net.is_server) return;
+        IReadOnlyList<uint> targets = ServerMain.AllClientIdsExceptHost;
+        if (targets.Count == 0) return;
+        Net.Server_SendToClients(DeliveryMethod.ReliableOrdered, in writer, targets);
     }
 
-    public static void SendToOne(this Messages msg, uint clientId, NetDataWriter payload)
+    public static void SendToOthers(NetDataWriter writer, uint excludeClientId)
     {
-        _simple.Srv_SendMsgOne((uint)msg, clientId, payload);
+        if (!Net.is_server) return;
+        List<uint> targets = ServerMain.GetListOfClientIdsExceptThisAndHost(excludeClientId);
+        if (targets.Count == 0) return;
+        IReadOnlyList<uint> roTargets = targets;
+        Net.Server_SendToClients(DeliveryMethod.ReliableOrdered, in writer, in roTargets);
     }
 
-    public static void SendToServer(this Messages msg, NetDataWriter payload)
+    public static void SendToOne(NetDataWriter writer, uint clientId)
     {
-        _simple.Cl_SendMsgSrv((uint)msg, payload);
+        if (!Net.is_server) return;
+        if (clientId == NetPlayer.LOCAL_PLAYER?.clientId) return;
+        Net.Server_SendTo(DeliveryMethod.ReliableOrdered, in writer, clientId);
+    }
+
+    public static void SendToServer(NetDataWriter writer)
+    {
+        Net.TRANSPORT.Client_Send(DeliveryMethod.ReliableOrdered, writer);
     }
 }

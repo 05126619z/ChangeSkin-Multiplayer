@@ -16,25 +16,28 @@ namespace ChangeSkinMP;
 
 public static class SkinManager
 {
-    public static SimpleMessage SimpleMessage { get; private set; }
     public static bool initialized = false;
-
     static SkinObject PendingSkin;
 
     internal static void AfterConnection()
     {
-        SimpleMessage = new(ServerMain.AllClientIdsExceptHost, NetPlayer.LOCAL_PLAYER.clientId);
-        MessageSender.Init(SimpleMessage);
-        Cl_SendRegistration();
+        SkinNetworkHandler.RegisterRecievers();
         NetworkRegistry.RegisterConnected(NetBody.NetIdToNetBody[NetPlayer.LOCAL_PLAYER.clientId]);
+        Cl_SendRegistration();
+
+        if (PendingSkin != null)
+        {
+            NetworkRegistry.LocalPlayerSkinController.SetSkin(PendingSkin);
+            PendingSkin = null;
+        }
     }
 
     private static void Cl_SendRegistration()
     {
-        NetDataWriter writer = new();
+        NetDataWriter writer = Net.CreateWriter((ushort)Messages.RegistrationMessage);
         writer.Put(NetPlayer.LOCAL_PLAYER.clientId);
         writer.Put(NetPlayer.LOCAL_PLAYER.playername);
-        MessageSender.SendToServer(Messages.RegistrationMessage, writer);
+        MessageSender.SendToServer(writer);
     }
 
     public static void TryLoadLastSkin()
@@ -45,25 +48,12 @@ public static class SkinManager
 
         try
         {
-            SkinObject skin;
-
-            if (ModConfig.Instance.LastSkinIsRemote)
-            {
-                // Сначала проверяем есть ли уже скачанный zip локально
-                skin = SkinObject.LoadFromLocal(lastSkin);
-                Plugin.Logger.LogInfo($"Loaded cached remote skin: {lastSkin}");
-            }
-            else
-            {
-                skin = SkinObject.LoadFromLocal(lastSkin);
-                Plugin.Logger.LogInfo($"Loaded local skin: {lastSkin}");
-            }
-
+            SkinObject skin = SkinObject.LoadFromLocal(lastSkin);
             PendingSkin = skin;
+            Plugin.Logger.LogInfo($"Loaded last skin: {lastSkin}");
         }
         catch (FileNotFoundException)
         {
-            // Локального кеша нет — качаем заново
             if (
                 ModConfig.Instance.LastSkinIsRemote
                 && !string.IsNullOrEmpty(ModConfig.Instance.LastURL)
@@ -95,9 +85,13 @@ public static class SkinManager
     public static void OnSceneUnloaded(Scene scene)
     {
         NetworkRegistry.Clear();
+        SkinNetworkHandler.Reset();
     }
 
-    // ── Реализации ───────────────────────────────────────────────────────────────
+    internal static void OnPlayerLeft(NetPlayer plr)
+    {
+        NetworkRegistry.RemovePlayer(plr.clientId);
+    }
 
     public static string LoadLocal(string skinName)
     {

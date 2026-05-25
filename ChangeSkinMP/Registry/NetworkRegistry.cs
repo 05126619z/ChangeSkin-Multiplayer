@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using KrokoshaCasualtiesMP;
+using UnityEngine;
 
 namespace ChangeSkinMP;
 
@@ -28,7 +29,6 @@ public static class NetworkRegistry
         );
         _players.Add(networkRegistryEntry);
 
-        // Локальный игрок получает контроллер
         if (netBody.netId == NetPlayer.LOCAL_PLAYER.clientId)
             LocalPlayerSkinController = netBody.body.gameObject.AddComponent<LocalSkinController>();
     }
@@ -36,9 +36,21 @@ public static class NetworkRegistry
     public static void RegisterDisconnected(NetBody netBody)
     {
         NetworkRegistryEntry networkRegistryEntry = Get(netBody);
-        networkRegistryEntry?.SkinController.Disable();
-        UnityEngine.Object.Destroy(networkRegistryEntry?.SkinController.CBody);
-        UnityEngine.Object.Destroy(networkRegistryEntry?.SkinController);
+        if (networkRegistryEntry == null) return;
+        networkRegistryEntry.SkinController.Disable();
+        UnityEngine.Object.Destroy(networkRegistryEntry.SkinController.CBody);
+        UnityEngine.Object.Destroy(networkRegistryEntry.SkinController);
+        _players.Remove(networkRegistryEntry);
+    }
+
+    public static void RemovePlayer(uint clientId)
+    {
+        NetworkRegistryEntry entry = Get(clientId);
+        if (entry == null) return;
+        entry.SkinController.Disable();
+        UnityEngine.Object.Destroy(entry.CBody);
+        UnityEngine.Object.Destroy(entry.SkinController);
+        _players.Remove(entry);
     }
 
     public static NetworkRegistryEntry? Get(uint clientId) =>
