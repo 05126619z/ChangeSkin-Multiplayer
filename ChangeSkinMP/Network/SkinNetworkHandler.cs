@@ -87,13 +87,15 @@ public static class SkinNetworkHandler
     {
         foreach (var entry in NetworkRegistry.Players)
         {
-            if (entry.CBody.Skin == null) continue;
             if (entry.ClientID == targetClientId) continue;
 
+            bool hasSkin = entry.CBody.Skin != null;
             NetDataWriter writer = Net.CreateWriter((ushort)Messages.SendSkinMessage);
             writer.Put(entry.ClientID);
-            entry.CBody.Skin.Serialize(writer);
-            Log.Info($"SkinSync: sending skin of {entry.ClientID} to new client {targetClientId}");
+            writer.Put(hasSkin);
+            if (hasSkin)
+                entry.CBody.Skin.Serialize(writer);
+            Log.Info($"SkinSync: sending {(hasSkin ? "skin" : "default")} of {entry.ClientID} to new client {targetClientId}");
             MessageSender.SendToOne(writer, targetClientId);
         }
     }
@@ -103,9 +105,8 @@ public static class SkinNetworkHandler
         try
         {
             uint ownerId = reader.GetUInt();
-            var skin = new SkinObject();
-            skin.Deserialize(reader);
-            Log.Info($"SendSkinMessage from {senderClientId} for owner {ownerId}");
+            bool hasSkin = reader.GetBool();
+            Log.Info($"SendSkinMessage from {senderClientId} for owner {ownerId}, hasSkin={hasSkin}");
 
             if (senderClientId != ownerId)
             {
@@ -117,11 +118,25 @@ public static class SkinNetworkHandler
             if (entry == null) return;
             if (BanList.Contains(entry.PlayerInfo)) return;
 
-            entry.SkinController.SetSkin(skin);
+            if (hasSkin)
+            {
+                var skin = new SkinObject();
+                skin.Deserialize(reader);
+                entry.SkinController.SetSkin(skin);
+            }
+            else
+            {
+                entry.SkinController.CBody.ResetSkin();
+            }
 
             NetDataWriter writer = Net.CreateWriter((ushort)Messages.SendSkinMessage);
             writer.Put(ownerId);
-            skin.Serialize(writer);
+            writer.Put(hasSkin);
+            if (hasSkin)
+            {
+                SkinObject skin = entry.CBody.Skin;
+                skin.Serialize(writer);
+            }
             MessageSender.SendToOthers(writer, senderClientId);
         }
         catch (Exception e)
@@ -161,12 +176,22 @@ public static class SkinNetworkHandler
         try
         {
             uint ownerId = reader.GetUInt();
-            var skin = new SkinObject();
-            skin.Deserialize(reader);
-            Log.Info($"SendSkinMessage received for owner {ownerId}");
+            bool hasSkin = reader.GetBool();
+            Log.Info($"SendSkinMessage received for owner {ownerId}, hasSkin={hasSkin}");
             if (NetPlayer.LOCAL_PLAYER.clientId == ownerId)
                 return;
-            NetworkRegistry.Get(ownerId)?.SkinController.SetSkin(skin);
+            var entry = NetworkRegistry.Get(ownerId);
+            if (entry == null) return;
+            if (hasSkin)
+            {
+                var skin = new SkinObject();
+                skin.Deserialize(reader);
+                entry.SkinController.SetSkin(skin);
+            }
+            else
+            {
+                entry.SkinController.CBody.ResetSkin();
+            }
         }
         catch (Exception e)
         {
@@ -182,6 +207,14 @@ public static class SkinNetworkHandler
             playerInfo.Deserialize(reader);
             bool banned = reader.GetBool();
             Log.Info($"SkinBanMessage received for {playerInfo.Nickname}: {banned}");
+
+            if (playerInfo.Nickname == NetPlayer.LOCAL_PLAYER.playername)
+            {
+                if (banned)
+                    NetworkRegistry.LocalPlayerSkinController?.ResetSkin();
+                return;
+            }
+
             var entry = NetworkRegistry.Get(playerInfo);
             if (entry != null)
                 entry.SkinController.OnBanReceived(banned);

@@ -36,6 +36,9 @@ public class RemoteSkinController : MonoBehaviour
     public void OnBanReceived(bool banned)
     {
         Banned = banned;
-        CBody.RepEnd();
+        if (banned)
+            CBody.ResetSkin();
+        else if (CBody.Skin != null)
+            CBody.RepStart();
     }
 }

@@ -84,6 +84,18 @@ namespace ChangeSkinMP
             Working = false;
         }
 
+        public void ResetSkin()
+        {
+            RepEnd();
+            Skin = null;
+            foreach (SpriteReplacer replacer in spriteReplacers)
+            {
+                replacer.Restore();
+                Destroy(replacer);
+            }
+            spriteReplacers.Clear();
+        }
+
         private void OnDestroy() => RepEnd();
 
         public bool Working { get; private set; } = false;
