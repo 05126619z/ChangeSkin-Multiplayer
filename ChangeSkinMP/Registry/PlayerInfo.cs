@@ -8,6 +8,8 @@ public class PlayerInfo : INetSerializable
     public string Nickname { get; private set; }
     public ulong? SteamID { get; private set; }
 
+    public PlayerInfo() { }
+
     public PlayerInfo(NetBody netBody)
     {
         Nickname = netBody.playername;
@@ -16,7 +18,7 @@ public class PlayerInfo : INetSerializable
 
     public void Serialize(NetDataWriter dataWriter)
     {
-        dataWriter.Put(Nickname);
+        dataWriter.Put(Nickname ?? "");
         dataWriter.Put(SteamID ?? 0);
     }
 
@@ -25,4 +27,9 @@ public class PlayerInfo : INetSerializable
         Nickname = dataReader.GetString();
         SteamID = dataReader.GetULong();
     }
+
+    public override bool Equals(object obj) =>
+        obj is PlayerInfo other && Nickname == other.Nickname && SteamID == other.SteamID;
+
+    public override int GetHashCode() => (Nickname, SteamID).GetHashCode();
 }

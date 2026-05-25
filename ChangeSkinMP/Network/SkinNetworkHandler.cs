@@ -1,137 +1,227 @@
-using System.Collections.Generic;
+using System;
 using KrokoshaCasualtiesMP;
-using LiteNetLib;
 using LiteNetLib.Utils;
-using UnityEngine;
 
 namespace ChangeSkinMP;
 
 public static class SkinNetworkHandler
 {
-    // public static void RegisterRecievers()
-    // {
-    //     // server
-    //     if (Net.is_server)
-    //     {
-    //         Net.RegisterServerReciever(
-    //             (ushort)Messages.RegistrationMessage,
-    //             Srv_Handler_Registration
-    //         );
-    //         Net.RegisterServerReciever((ushort)Messages.SendSkinMessage, Srv_Handler_SkinMessage);
-    //     }
+    private static bool _registered;
 
-    //     // client
-    //     if (Net.is_client)
-    //     {
-    //         Net.RegisterClientReciever(
-    //             (ushort)Messages.RegistrySyncMessage,
-    //             Cl_Handler_RegistrySync
-    //         );
-    //         Net.RegisterClientReciever((ushort)Messages.SendSkinMessage, Cl_Handler_SkinMessage);
-    //     }
-    // }
+    public static void Reset() => _registered = false;
 
-    [ServerReciever((ushort)Messages.RegistrationMessage)]
-    private static void Srv_Handler_Registration(uint senderClientId, ref NetDataReader reader)
+    public static void RegisterRecievers()
     {
-        uint clientId = reader.GetUInt();
-        string nickname = reader.GetString();
-        Log.Info(
-            $"RegistrationMessage received from {senderClientId} for client {clientId} ({nickname})"
-        );
+        if (_registered)
+            return;
+        _registered = true;
 
-        // Регистрируем у себя если ещё нет
-        if (NetworkRegistry.Get(clientId) == null)
+        if (Net.is_server)
         {
-            NetBody netBody = NetPlayer.ClientIdToPlayerDict[clientId]?.GetComponent<NetBody>();
-            if (netBody != null)
-                NetworkRegistry.RegisterConnected(netBody);
+            Net.RegisterServerReciever(
+                (ushort)Messages.RegistrationMessage,
+                Srv_Handler_Registration
+            );
+            Net.RegisterServerReciever(
+                (ushort)Messages.SendSkinMessage,
+                Srv_Handler_SkinMessage
+            );
         }
 
-        // Синхронизируем весь регистр со всеми
-        Srv_Sender_RegistrySync();
+        if (Net.is_client_or_host)
+        {
+            Net.RegisterClientReciever(
+                (ushort)Messages.RegistrySyncMessage,
+                Cl_Handler_RegistrySync
+            );
+            Net.RegisterClientReciever(
+                (ushort)Messages.SendSkinMessage,
+                Cl_Handler_SkinMessage
+            );
+            Net.RegisterClientReciever(
+                (ushort)Messages.SkinBanMessage,
+                Cl_Handler_SkinBanMessage
+            );
+        }
+    }
+
+    private static void Srv_Handler_Registration(uint senderClientId, ref NetDataReader reader)
+    {
+        try
+        {
+            uint clientId = reader.GetUInt();
+            string nickname = reader.GetString();
+            Log.Info($"RegistrationMessage from {senderClientId} for {clientId} ({nickname})");
+
+            if (NetworkRegistry.Get(clientId) == null)
+            {
+                if (NetBody.NetIdToNetBody.TryGetValue(clientId, out NetBody netBody))
+                    NetworkRegistry.RegisterConnected(netBody);
+            }
+
+            Srv_Sender_RegistrySync();
+            Srv_Sender_SkinSync(senderClientId);
+        }
+        catch (Exception e)
+        {
+            Log.Err($"Srv_Handler_Registration error: {e}");
+        }
     }
 
     private static void Srv_Sender_RegistrySync()
     {
         var entries = NetworkRegistry.Players;
-        Log.Info($"Sending RegistrySyncMessage with {entries.Count} entries to all");
+        Log.Info($"Sending RegistrySyncMessage with {entries.Count} entries");
 
-        NetDataWriter writer = new();
+        NetDataWriter writer = Net.CreateWriter((ushort)Messages.RegistrySyncMessage);
         writer.Put(entries.Count);
         foreach (var entry in entries)
         {
             writer.Put(entry.ClientID);
             writer.Put(entry.PlayerInfo.Nickname);
         }
-
-        MessageSender.SendToAll(Messages.RegistrySyncMessage, writer);
+        MessageSender.SendToAll(writer);
     }
 
-    [ServerReciever((ushort)Messages.RegistrySyncMessage)]
-    private static void Cl_Handler_RegistrySync(uint _, ref NetDataReader reader)
+    private static void Srv_Sender_SkinSync(uint targetClientId)
     {
-        int count = reader.GetInt();
-        Log.Info($"RegistrySyncMessage received with {count} entries");
-        for (int i = 0; i < count; i++)
+        foreach (var entry in NetworkRegistry.Players)
         {
-            uint clientId = reader.GetUInt();
-            string nickname = reader.GetString();
+            if (entry.ClientID == targetClientId) continue;
 
-            // Свой — пропускаем, LocalController уже есть
-            if (clientId == NetPlayer.LOCAL_PLAYER.clientId)
-                continue;
-
-            // Уже зарегистрирован — пропускаем
-            if (NetworkRegistry.Get(clientId) != null)
-                continue;
-
-            // Регистрируем чужого
-            NetBody netBody = NetPlayer.ClientIdToPlayerDict[clientId].GetComponent<NetBody>();
-            if (netBody != null)
-                NetworkRegistry.RegisterConnected(netBody);
+            bool hasSkin = entry.CBody.Skin != null;
+            NetDataWriter writer = Net.CreateWriter((ushort)Messages.SendSkinMessage);
+            writer.Put(entry.ClientID);
+            writer.Put(hasSkin);
+            if (hasSkin)
+                entry.CBody.Skin.Serialize(writer);
+            Log.Info($"SkinSync: sending {(hasSkin ? "skin" : "default")} of {entry.ClientID} to new client {targetClientId}");
+            MessageSender.SendToOne(writer, targetClientId);
         }
     }
 
-    // Сервер получает от клиента → валидирует → ретранслирует всем
-
-    [ServerReciever((ushort)Messages.SendSkinMessage)]
     private static void Srv_Handler_SkinMessage(uint senderClientId, ref NetDataReader reader)
     {
-        uint ownerId = reader.GetUInt();
-        var skin = new SkinObject();
-        skin.Deserialize(reader);
-        Log.Info($"SendSkinMessage received from {senderClientId} for owner {ownerId}");
-
-        // Клиент может слать только за себя
-        if (senderClientId != ownerId)
+        try
         {
-            Log.Warn($"Client {senderClientId} tried to spoof skin for {ownerId}");
-            return;
+            uint ownerId = reader.GetUInt();
+            bool hasSkin = reader.GetBool();
+            Log.Info($"SendSkinMessage from {senderClientId} for owner {ownerId}, hasSkin={hasSkin}");
+
+            if (senderClientId != ownerId)
+            {
+                Log.Warn($"Client {senderClientId} tried to spoof skin for {ownerId}");
+                return;
+            }
+
+            var entry = NetworkRegistry.Get(senderClientId);
+            if (entry == null) return;
+            if (BanList.Contains(entry.PlayerInfo)) return;
+
+            if (hasSkin)
+            {
+                var skin = new SkinObject();
+                skin.Deserialize(reader);
+                entry.SkinController.SetSkin(skin);
+            }
+            else
+            {
+                entry.SkinController.CBody.ResetSkin();
+            }
+
+            NetDataWriter writer = Net.CreateWriter((ushort)Messages.SendSkinMessage);
+            writer.Put(ownerId);
+            writer.Put(hasSkin);
+            if (hasSkin)
+            {
+                SkinObject skin = entry.CBody.Skin;
+                skin.Serialize(writer);
+            }
+            MessageSender.SendToOthers(writer, senderClientId);
         }
-
-        if (BanList.Contains(NetworkRegistry.Get(senderClientId).PlayerInfo))
-            return;
-
-        // Применяем на хосте
-        NetworkRegistry.Get(ownerId).SkinController.SetSkin(skin);
-
-        // Ретранслируем остальным клиентам
-        NetDataWriter writer = new();
-        writer.Put(ownerId);
-        skin.Serialize(writer);
-        MessageSender.SendToAll(Messages.SendSkinMessage, writer);
+        catch (Exception e)
+        {
+            Log.Err($"Srv_Handler_SkinMessage error: {e}");
+        }
     }
 
-    [ServerReciever((ushort)Messages.SendSkinMessage)]
+    private static void Cl_Handler_RegistrySync(uint _, ref NetDataReader reader)
+    {
+        try
+        {
+            int count = reader.GetInt();
+            Log.Info($"RegistrySyncMessage received with {count} entries");
+            for (int i = 0; i < count; i++)
+            {
+                uint clientId = reader.GetUInt();
+                string nickname = reader.GetString();
+
+                if (clientId == NetPlayer.LOCAL_PLAYER.clientId)
+                    continue;
+                if (NetworkRegistry.Get(clientId) != null)
+                    continue;
+
+                if (NetBody.NetIdToNetBody.TryGetValue(clientId, out NetBody netBody))
+                    NetworkRegistry.RegisterConnected(netBody);
+            }
+        }
+        catch (Exception e)
+        {
+            Log.Err($"Cl_Handler_RegistrySync error: {e}");
+        }
+    }
+
     private static void Cl_Handler_SkinMessage(uint _, ref NetDataReader reader)
     {
-        uint ownerId = reader.GetUInt();
-        var skin = new SkinObject();
-        skin.Deserialize(reader);
-        Log.Info($"SendSkinMessage received for owner {ownerId}");
-        if (NetPlayer.LOCAL_PLAYER.clientId == ownerId)
-            return;
-        NetworkRegistry.Get(ownerId)?.SkinController.SetSkin(skin);
+        try
+        {
+            uint ownerId = reader.GetUInt();
+            bool hasSkin = reader.GetBool();
+            Log.Info($"SendSkinMessage received for owner {ownerId}, hasSkin={hasSkin}");
+            if (NetPlayer.LOCAL_PLAYER.clientId == ownerId)
+                return;
+            var entry = NetworkRegistry.Get(ownerId);
+            if (entry == null) return;
+            if (hasSkin)
+            {
+                var skin = new SkinObject();
+                skin.Deserialize(reader);
+                entry.SkinController.SetSkin(skin);
+            }
+            else
+            {
+                entry.SkinController.CBody.ResetSkin();
+            }
+        }
+        catch (Exception e)
+        {
+            Log.Err($"Cl_Handler_SkinMessage error: {e}");
+        }
+    }
+
+    private static void Cl_Handler_SkinBanMessage(uint _, ref NetDataReader reader)
+    {
+        try
+        {
+            var playerInfo = new PlayerInfo();
+            playerInfo.Deserialize(reader);
+            bool banned = reader.GetBool();
+            Log.Info($"SkinBanMessage received for {playerInfo.Nickname}: {banned}");
+
+            if (playerInfo.Nickname == NetPlayer.LOCAL_PLAYER.playername)
+            {
+                if (banned)
+                    NetworkRegistry.LocalPlayerSkinController?.ResetSkin();
+                return;
+            }
+
+            var entry = NetworkRegistry.Get(playerInfo);
+            if (entry != null)
+                entry.SkinController.OnBanReceived(banned);
+        }
+        catch (Exception e)
+        {
+            Log.Err($"Cl_Handler_SkinBanMessage error: {e}");
+        }
     }
 }

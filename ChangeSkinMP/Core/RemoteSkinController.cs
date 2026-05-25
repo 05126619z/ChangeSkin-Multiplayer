@@ -15,6 +15,8 @@ public class RemoteSkinController : MonoBehaviour
     public void SetSkin(SkinObject skin)
     {
         CBody.ApplySkin(skin);
+        if (!Banned)
+            CBody.RepStart();
     }
 
     public void RequestSkin() { }
@@ -34,6 +36,9 @@ public class RemoteSkinController : MonoBehaviour
     public void OnBanReceived(bool banned)
     {
         Banned = banned;
-        CBody.RepEnd();
+        if (banned)
+            CBody.ResetSkin();
+        else if (CBody.Skin != null)
+            CBody.RepStart();
     }
 }

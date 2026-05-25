@@ -6,7 +6,6 @@ using UnityEngine;
 
 namespace ChangeSkinMP;
 
-// Вешается на того же GameObject что и ChangeBody, но только локальному игроку
 public class LocalSkinController : MonoBehaviour
 {
     public ChangeBody CBody { get; private set; }
@@ -16,11 +15,11 @@ public class LocalSkinController : MonoBehaviour
         CBody = GetComponent<ChangeBody>();
     }
 
-    // Смена скина — только локальный игрок может это вызвать
     public void SetSkin(string skinName)
     {
         SkinObject skin = SkinObject.LoadFromLocal(skinName);
         CBody.ApplySkin(skin);
+        CBody.RepStart();
         SendToOthers(skin);
     }
 
@@ -28,27 +27,38 @@ public class LocalSkinController : MonoBehaviour
     {
         SkinObject skin = SkinObject.LoadFromUri(uri);
         CBody.ApplySkin(skin);
+        CBody.RepStart();
         SendToOthers(skin);
     }
 
     public void SetSkin(SkinObject skin)
     {
         CBody.ApplySkin(skin);
+        CBody.RepStart();
         SendToOthers(skin);
     }
 
     private void SendToOthers(SkinObject skin)
     {
-        var writer = new NetDataWriter();
+        NetDataWriter writer = Net.CreateWriter((ushort)Messages.SendSkinMessage);
         writer.Put(CBody.OwnerID);
+        writer.Put(true);
         skin.Serialize(writer);
         if (Net.is_server)
-        {
-            MessageSender.SendToAll(Messages.SendSkinMessage, writer);
-        }
+            MessageSender.SendToAll(writer);
         else
-        {
-            MessageSender.SendToServer(Messages.SendSkinMessage, writer);
-        }
+            MessageSender.SendToServer(writer);
+    }
+
+    public void ResetSkin()
+    {
+        CBody.ResetSkin();
+        NetDataWriter writer = Net.CreateWriter((ushort)Messages.SendSkinMessage);
+        writer.Put(CBody.OwnerID);
+        writer.Put(false);
+        if (Net.is_server)
+            MessageSender.SendToAll(writer);
+        else
+            MessageSender.SendToServer(writer);
     }
 }
