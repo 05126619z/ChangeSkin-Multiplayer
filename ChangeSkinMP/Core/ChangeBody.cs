@@ -79,7 +79,8 @@ namespace ChangeSkinMP
         {
             foreach (SpriteReplacer spriteReplacer in spriteReplacers)
             {
-                spriteReplacer.Restore();
+                if (spriteReplacer != null)
+                    spriteReplacer.Restore();
             }
             Working = false;
         }

@@ -48,6 +48,7 @@ public class LocalSkinController : MonoBehaviour
             MessageSender.SendToAll(writer);
         else
             MessageSender.SendToServer(writer);
+        Log.Info($"Skin change sent (owner={CBody.OwnerID}, skin={skin.Name})");
     }
 
     public void ResetSkin()
@@ -60,5 +61,6 @@ public class LocalSkinController : MonoBehaviour
             MessageSender.SendToAll(writer);
         else
             MessageSender.SendToServer(writer);
+        Log.Info($"Skin change sent (owner={CBody.OwnerID}, skin=default)");
     }
 }
