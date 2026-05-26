@@ -18,30 +18,20 @@ public static class SkinNetworkHandler
 
         if (Net.is_server)
         {
-            Net.RegisterServerReciever(
-                (ushort)Messages.RegistrationMessage,
-                Srv_Handler_Registration
-            );
-            Net.RegisterServerReciever(
-                (ushort)Messages.SendSkinMessage,
-                Srv_Handler_SkinMessage
-            );
+            try { Net.RegisterServerReciever((ushort)Messages.RegistrationMessage, Srv_Handler_Registration); }
+            catch (ArgumentException) { Log.Info($"Server receiver {Messages.RegistrationMessage} already registered"); }
+            try { Net.RegisterServerReciever((ushort)Messages.SendSkinMessage, Srv_Handler_SkinMessage); }
+            catch (ArgumentException) { Log.Info($"Server receiver {Messages.SendSkinMessage} already registered"); }
         }
 
         if (Net.is_client_or_host)
         {
-            Net.RegisterClientReciever(
-                (ushort)Messages.RegistrySyncMessage,
-                Cl_Handler_RegistrySync
-            );
-            Net.RegisterClientReciever(
-                (ushort)Messages.SendSkinMessage,
-                Cl_Handler_SkinMessage
-            );
-            Net.RegisterClientReciever(
-                (ushort)Messages.SkinBanMessage,
-                Cl_Handler_SkinBanMessage
-            );
+            try { Net.RegisterClientReciever((ushort)Messages.RegistrySyncMessage, Cl_Handler_RegistrySync); }
+            catch (ArgumentException) { Log.Info($"Client receiver {Messages.RegistrySyncMessage} already registered"); }
+            try { Net.RegisterClientReciever((ushort)Messages.SendSkinMessage, Cl_Handler_SkinMessage); }
+            catch (ArgumentException) { Log.Info($"Client receiver {Messages.SendSkinMessage} already registered"); }
+            try { Net.RegisterClientReciever((ushort)Messages.SkinBanMessage, Cl_Handler_SkinBanMessage); }
+            catch (ArgumentException) { Log.Info($"Client receiver {Messages.SkinBanMessage} already registered"); }
         }
     }
 
@@ -131,12 +121,14 @@ public static class SkinNetworkHandler
                 skin.Deserialize(reader);
                 entry.SkinController.SetSkin(skin);
                 Log.Info($"Skin change received from \"{entry.PlayerInfo.Nickname}\" (skin={skin.Name})");
+                ConsoleScript.instance.LogToConsole($"[ChangeSkin] {entry.PlayerInfo.Nickname} has changed their skin");
                 VerifySkinApplied(entry, skin.Name);
             }
             else
             {
                 entry.SkinController.CBody.ResetSkin();
                 Log.Info($"Skin change received from \"{entry.PlayerInfo.Nickname}\" (skin=default)");
+                ConsoleScript.instance.LogToConsole($"[ChangeSkin] {entry.PlayerInfo.Nickname} has changed their skin");
             }
 
             NetDataWriter writer = Net.CreateWriter((ushort)Messages.SendSkinMessage);
@@ -198,12 +190,14 @@ public static class SkinNetworkHandler
                 skin.Deserialize(reader);
                 entry.SkinController.SetSkin(skin);
                 Log.Info($"Skin change received from \"{nickname}\" (skin={skin.Name})");
+                ConsoleScript.instance.LogToConsole($"[ChangeSkin] {nickname} has changed their skin");
                 VerifySkinApplied(entry, skin.Name);
             }
             else
             {
                 entry.SkinController.CBody.ResetSkin();
                 Log.Info($"Skin change received from \"{nickname}\" (skin=default)");
+                ConsoleScript.instance.LogToConsole($"[ChangeSkin] {nickname} has changed their skin");
             }
         }
         catch (Exception e)

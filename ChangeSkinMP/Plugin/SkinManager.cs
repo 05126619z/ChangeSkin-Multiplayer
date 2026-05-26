@@ -94,6 +94,7 @@ public static class SkinManager
     public static void OnSceneUnloaded(Scene scene)
     {
         NetworkRegistry.Clear();
+        SkinNetworkHandler.Reset();
         PendingSkin = null;
     }
 
