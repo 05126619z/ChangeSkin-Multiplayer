@@ -1,0 +1,46 @@
+﻿using System;
+using System.IO;
+using System.Reflection;
+using BepInEx;
+using BepInEx.Logging;
+using HarmonyLib;
+using KrokoshaCasualtiesMP;
+using UnityEngine;
+using UnityEngine.Events;
+using UnityEngine.SceneManagement;
+
+namespace ChangeSkinMP
+{
+    [BepInPlugin(ModGUID, ModName, ModVersion)]
+    public class Plugin : BaseUnityPlugin
+    {
+        public const string ModGUID = "05126619z.changeskin";
+        public const string ModName = "ChangeSkin";
+        public const string ModVersion = "3.0.0";
+
+        internal static new ManualLogSource Logger;
+        private readonly Harmony _harmony = new(ModGUID);
+        public static Plugin Instance { get; private set; } = null!;
+        public static GameObject SingletonObject;
+
+        public void Awake()
+        {
+            Logger = base.Logger;
+            Instance = this;
+            try
+            {
+                _harmony.PatchAll();
+            }
+            catch (Exception e)
+            {
+                Logger.LogError(e);
+            }
+            SceneManager.sceneUnloaded += new UnityAction<Scene>(SkinManager.OnSceneUnloaded);
+            WorldgenPatches.OnWorldgenFinish += SkinManager.AfterConnection;
+            NetPlayer.OnPlayerLeft += SkinManager.OnPlayerLeft;
+            ModConfig.Load();
+            SkinManager.TryLoadLastSkin();
+            Logger.LogInfo($"Plugin {ModName} is loaded!");
+        }
+    }
+}

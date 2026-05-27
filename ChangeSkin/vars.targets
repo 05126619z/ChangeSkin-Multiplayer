@@ -1,9 +1,0 @@
-<Project>
-  <PropertyGroup>
-    <!--Set this to the game's main folder-->
-    <BaseGamePath>/home/ssd/Downloads/CasualtiesUnknownV5.1Demo/CasualtiesUnknownDemo/</BaseGamePath>
-    <BepInExDir>$(BaseGamePath)/BepInEx</BepInExDir>
-    <GameAssembliesDir>$(BaseGamePath)/CasualtiesUnknown_Data/Managed</GameAssembliesDir>
-    <PluginDirName>ChangeSkin</PluginDirName>
-  </PropertyGroup>
-</Project>
