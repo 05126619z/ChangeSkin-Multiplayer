@@ -43,7 +43,8 @@ public sealed class SpriteReplacer : MonoBehaviour
     public void Restore()
     {
         Active = false;
-        Renderer.sprite = Original;
+        if (Renderer != null)
+            Renderer.sprite = Original;
     }
 
     private void OnDestroy() => Restore();

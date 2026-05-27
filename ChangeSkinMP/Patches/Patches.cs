@@ -47,7 +47,7 @@ namespace ChangeSkinMP
     {
         public static void Postfix(NetBody __instance)
         {
-            if (Net.is_server || __instance.netId == NetPlayer.LOCAL_PLAYER.clientId)
+            if (Net.is_server || Net.is_client_or_host)
             {
                 NetworkRegistry.RegisterConnected(__instance);
             }

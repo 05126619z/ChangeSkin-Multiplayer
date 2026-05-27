@@ -23,7 +23,9 @@ public static class SkinManager
     {
         SkinNetworkHandler.RegisterRecievers();
         NetworkRegistry.RegisterConnected(NetBody.NetIdToNetBody[NetPlayer.LOCAL_PLAYER.clientId]);
-        Cl_SendRegistration();
+
+        if (!Net.is_server)
+            Cl_SendRegistration();
 
         if (PendingSkin != null)
         {
@@ -34,10 +36,17 @@ public static class SkinManager
 
     private static void Cl_SendRegistration()
     {
-        NetDataWriter writer = Net.CreateWriter((ushort)Messages.RegistrationMessage);
-        writer.Put(NetPlayer.LOCAL_PLAYER.clientId);
-        writer.Put(NetPlayer.LOCAL_PLAYER.playername);
-        MessageSender.SendToServer(writer);
+        try
+        {
+            NetDataWriter writer = Net.CreateWriter((ushort)Messages.RegistrationMessage);
+            writer.Put(NetPlayer.LOCAL_PLAYER.clientId);
+            writer.Put(NetPlayer.LOCAL_PLAYER.playername);
+            MessageSender.SendToServer(writer);
+        }
+        catch (Exception e)
+        {
+            Plugin.Logger.LogWarning($"Failed to send registration: {e.Message}");
+        }
     }
 
     public static void TryLoadLastSkin()
@@ -86,6 +95,7 @@ public static class SkinManager
     {
         NetworkRegistry.Clear();
         SkinNetworkHandler.Reset();
+        PendingSkin = null;
     }
 
     internal static void OnPlayerLeft(NetPlayer plr)
@@ -186,6 +196,9 @@ public static class SkinManager
         {
             networkRegistryEntry.SkinController.Enable();
         }
+        if (NetworkRegistry.LocalPlayerSkinController?.CBody != null
+            && NetworkRegistry.LocalPlayerSkinController.CBody.Skin != null)
+            NetworkRegistry.LocalPlayerSkinController.CBody.RepStart();
         return "ChangeSkin enabled";
     }
 
@@ -195,6 +208,8 @@ public static class SkinManager
         {
             networkRegistryEntry.SkinController.Disable();
         }
+        if (NetworkRegistry.LocalPlayerSkinController?.CBody != null)
+            NetworkRegistry.LocalPlayerSkinController.CBody.RepEnd();
         return "ChangeSkin disabled";
     }
 }

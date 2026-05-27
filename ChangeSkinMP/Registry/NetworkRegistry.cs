@@ -38,8 +38,15 @@ public static class NetworkRegistry
         NetworkRegistryEntry networkRegistryEntry = Get(netBody);
         if (networkRegistryEntry == null) return;
         networkRegistryEntry.SkinController.Disable();
+        if (networkRegistryEntry.SkinController.CBody != null)
+            networkRegistryEntry.SkinController.CBody.ResetSkin();
         UnityEngine.Object.Destroy(networkRegistryEntry.SkinController.CBody);
         UnityEngine.Object.Destroy(networkRegistryEntry.SkinController);
+        if (netBody.netId == NetPlayer.LOCAL_PLAYER.clientId && LocalPlayerSkinController != null)
+        {
+            UnityEngine.Object.Destroy(LocalPlayerSkinController);
+            LocalPlayerSkinController = null;
+        }
         _players.Remove(networkRegistryEntry);
     }
 
@@ -48,8 +55,15 @@ public static class NetworkRegistry
         NetworkRegistryEntry entry = Get(clientId);
         if (entry == null) return;
         entry.SkinController.Disable();
+        if (entry.CBody != null)
+            entry.CBody.ResetSkin();
         UnityEngine.Object.Destroy(entry.CBody);
         UnityEngine.Object.Destroy(entry.SkinController);
+        if (clientId == NetPlayer.LOCAL_PLAYER.clientId && LocalPlayerSkinController != null)
+        {
+            UnityEngine.Object.Destroy(LocalPlayerSkinController);
+            LocalPlayerSkinController = null;
+        }
         _players.Remove(entry);
     }
 
@@ -67,12 +81,17 @@ public static class NetworkRegistry
 
     public static void Clear()
     {
-        LocalPlayerSkinController?.CBody.RepEnd();
-        LocalPlayerSkinController = null;
         foreach (NetworkRegistryEntry entry in _players)
         {
+            if (entry.CBody != null)
+                entry.CBody.ResetSkin();
             UnityEngine.Object.Destroy(entry.CBody);
             UnityEngine.Object.Destroy(entry.SkinController);
+        }
+        if (LocalPlayerSkinController != null)
+        {
+            UnityEngine.Object.Destroy(LocalPlayerSkinController);
+            LocalPlayerSkinController = null;
         }
         _players.Clear();
     }
