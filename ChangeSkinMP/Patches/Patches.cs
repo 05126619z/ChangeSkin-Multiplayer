@@ -85,29 +85,35 @@ namespace ChangeSkinMP
         }
     }
 
-    // [HarmonyPatch(typeof(KrokoshaScavMultiplayer), nameof(KrokoshaScavMultiplayer._FIRST_INIT))]
+// [HarmonyPatch(typeof(KrokoshaScavMultiplayer), nameof(KrokoshaScavMultiplayer._FIRST_INIT))]
     // internal class KrokoshaScavMultiplayer_Patch__FIRST_INIT
     // {
     //     public static void Postfix()
     //     {
-
+    // 
     //     }
     // }
 
-    // [HarmonyPatch(typeof(ConsoleScript), nameof(ConsoleScript.TryExecuteCommand))]
-    // [HarmonyPriority(300)] // Hijack this shit from krok's thing
-    // internal class ConsoleScript_Patch_TryExecuteCommand
-    // {
-    //     public static bool Prefix(ConsoleScript __instance, string[] args, bool addToLog)
-    //     {
-    //         if (args[0] == "skin")
-    //         {
-    //             string output = SkinManager.Execute(args);
-    //             __instance.LogToConsole(output);
-    //             __instance.AddCommandToLogAndClearInput();
-    //             return false;
-    //         }
-    //         return true;
-    //     }
-    // }
+    [HarmonyPatch(typeof(ConsoleScript), nameof(ConsoleScript.TryExecuteCommand))]
+    [HarmonyPriority(700)]
+    internal class ConsoleScript_Patch_TryExecuteCommand
+    {
+        public static bool Prefix(ConsoleScript __instance, string[] args)
+        {
+            if (args[0] == "skin")
+            {
+                if (!Con.CanExecuteAdminCommands())
+                {
+                    __instance.LogToConsole("Only the host or an admin can use skin commands.");
+                    __instance.AddCommandToLogAndClearInput();
+                    return false;
+                }
+                string output = ArgsParser.Execute(args);
+                __instance.LogToConsole(output);
+                __instance.AddCommandToLogAndClearInput();
+                return false;
+            }
+            return true;
+        }
+    }
 }
