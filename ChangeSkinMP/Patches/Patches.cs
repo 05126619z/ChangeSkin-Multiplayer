@@ -82,6 +82,8 @@ namespace ChangeSkinMP
                     []
                 )
             );
+
+            Con.localonly_commands.Add("skin");
         }
     }
 
