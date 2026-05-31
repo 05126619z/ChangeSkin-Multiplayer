@@ -76,9 +76,17 @@ namespace ChangeSkinMP
                     {
                         string output = ArgsParser.Execute(args);
                         ConsoleScript.instance.LogToConsole(output);
-                        // Plugin.Logger.LogInfo(output);
                     },
-                    null,
+                    new Dictionary<int, List<string>>
+                    {
+                        [0] = new List<string>
+                        {
+                            "load-local", "load-remote", "rule-set", "rule-get",
+                            "ban", "unban", "enable", "disable"
+                        },
+                        [1] = new List<string> { "SkinUploading", "SkinDownloading" },
+                        [2] = new List<string> { "true", "false" }
+                    },
                     []
                 )
             );
