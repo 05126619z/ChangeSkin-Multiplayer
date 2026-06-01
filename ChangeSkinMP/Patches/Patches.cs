@@ -222,10 +222,29 @@ namespace ChangeSkinMP
             {
                 if (!Con.CanExecuteAdminCommands())
                 {
-                    __instance.LogToConsole("Only the host or an admin can use skin commands.");
-                    __instance.AddCommandToLogAndClearInput();
-                    return false;
+                    string subcommand = args.Length > 1 ? args[1].ToLowerInvariant() : "";
+                    bool isAdminCommand = subcommand == "enable"
+                        || subcommand == "disable"
+                        || subcommand == "rule-set"
+                        || subcommand == "rule-get"
+                        || subcommand == "ban"
+                        || subcommand == "unban";
+
+                    if (isAdminCommand)
+                    {
+                        __instance.LogToConsole("Only the host or an admin can use that skin command.");
+                        __instance.AddCommandToLogAndClearInput();
+                        return false;
+                    }
+
+                    if (!ModConfig.Instance.SkinChangingEnabled)
+                    {
+                        __instance.LogToConsole("[ChangeSkin] Skin changing is currently disabled. An admin must enable it first.");
+                        __instance.AddCommandToLogAndClearInput();
+                        return false;
+                    }
                 }
+
                 string output = ArgsParser.Execute(args);
                 __instance.LogToConsole(output);
                 __instance.AddCommandToLogAndClearInput();

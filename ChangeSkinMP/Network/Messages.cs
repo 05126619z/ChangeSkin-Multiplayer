@@ -13,4 +13,5 @@ public enum Messages : ushort
     SendSkinMessage,
     RegistrySyncMessage,
     SkinBanMessage,
+    SkinAnnouncementMessage,
 }
