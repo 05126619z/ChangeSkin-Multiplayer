@@ -16,7 +16,7 @@ namespace ChangeSkinMP
     {
         public const string ModGUID = "05126619z.changeskin";
         public const string ModName = "ChangeSkin";
-        public const string ModVersion = "3.0.1";
+        public const string ModVersion = "3.1.0";
 
         internal static new ManualLogSource Logger;
         private readonly Harmony _harmony = new(ModGUID);
