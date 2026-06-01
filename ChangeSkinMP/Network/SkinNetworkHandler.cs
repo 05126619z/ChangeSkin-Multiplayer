@@ -32,6 +32,8 @@ public static class SkinNetworkHandler
             catch (ArgumentException) { Log.Info($"Client receiver {Messages.SendSkinMessage} already registered"); }
             try { Net.RegisterClientReciever((ushort)Messages.SkinBanMessage, Cl_Handler_SkinBanMessage); }
             catch (ArgumentException) { Log.Info($"Client receiver {Messages.SkinBanMessage} already registered"); }
+            try { Net.RegisterClientReciever((ushort)Messages.SkinAnnouncementMessage, Cl_Handler_SkinAnnouncement); }
+            catch (ArgumentException) { Log.Info($"Client receiver {Messages.SkinAnnouncementMessage} already registered"); }
         }
     }
 
@@ -230,5 +232,32 @@ public static class SkinNetworkHandler
         {
             Log.Err($"Cl_Handler_SkinBanMessage error: {e}");
         }
+    }
+
+    private static void Cl_Handler_SkinAnnouncement(uint _, ref NetDataReader reader)
+    {
+        try
+        {
+            bool enabled = reader.GetBool();
+            string message = reader.GetString();
+            ModConfig.Instance.SkinChangingEnabled = enabled;
+            ModConfig.Instance.Save();
+            ConsoleScript.instance.LogToConsole($"[ChangeSkin] {message}");
+            Log.Info($"SkinAnnouncement received: skins {(enabled ? "enabled" : "disabled")}");
+        }
+        catch (Exception e)
+        {
+            Log.Err($"Cl_Handler_SkinAnnouncement error: {e}");
+        }
+    }
+
+    public static void BroadcastSkinAnnouncement(bool enabled, string message)
+    {
+        if (!Net.is_server) return;
+        NetDataWriter writer = Net.CreateWriter((ushort)Messages.SkinAnnouncementMessage);
+        writer.Put(enabled);
+        writer.Put(message);
+        MessageSender.SendToAll(writer);
+        Log.Info($"SkinAnnouncement broadcast: {message}");
     }
 }

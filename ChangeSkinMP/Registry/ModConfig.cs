@@ -33,6 +33,9 @@ public sealed class ModConfig
     [JsonProperty("skinDownloading")]
     public bool SkinDownloading { get; set; } = true;
 
+    [JsonProperty("skinChangingEnabled")]
+    public bool SkinChangingEnabled { get; set; } = false;
+
     [JsonProperty("recentSkins")]
     public List<string> RecentSkins { get; set; } = new();
 
