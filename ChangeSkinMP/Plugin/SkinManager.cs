@@ -197,7 +197,8 @@ public static class SkinManager
 
         foreach (NetworkRegistryEntry networkRegistryEntry in NetworkRegistry.Players)
         {
-            networkRegistryEntry.SkinController.Enable();
+            if (networkRegistryEntry.CBody?.Skin != null && !networkRegistryEntry.SkinController.Banned)
+                networkRegistryEntry.SkinController.Enable();
         }
         if (NetworkRegistry.LocalPlayerSkinController?.CBody != null
             && NetworkRegistry.LocalPlayerSkinController.CBody.Skin != null)
@@ -212,13 +213,6 @@ public static class SkinManager
     {
         ModConfig.Instance.SkinChangingEnabled = false;
         ModConfig.Instance.Save();
-
-        foreach (NetworkRegistryEntry networkRegistryEntry in NetworkRegistry.Players)
-        {
-            networkRegistryEntry.SkinController.Disable();
-        }
-        if (NetworkRegistry.LocalPlayerSkinController?.CBody != null)
-            NetworkRegistry.LocalPlayerSkinController.CBody.RepEnd();
 
         SkinNetworkHandler.BroadcastSkinAnnouncement(false, "Skin changing has now been disabled.");
         ConsoleScript.instance.LogToConsole("[ChangeSkin] Skin changing has now been disabled.");
