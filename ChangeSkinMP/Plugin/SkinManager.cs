@@ -39,7 +39,7 @@ public static class SkinManager
         try
         {
             NetDataWriter writer = Net.CreateWriter((ushort)Messages.RegistrationMessage);
-            writer.Put(NetPlayer.LOCAL_PLAYER.clientId);
+            writer.Put((uint)NetPlayer.LOCAL_PLAYER.clientId);
             writer.Put(NetPlayer.LOCAL_PLAYER.playername);
             MessageSender.SendToServer(writer);
         }

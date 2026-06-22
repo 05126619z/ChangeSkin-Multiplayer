@@ -23,7 +23,7 @@ namespace ChangeSkinMP
         }
     }
 
-    [HarmonyPatch(typeof(NetBody), nameof(NetBody.DestroyNPC))]
+    [HarmonyPatch(typeof(NetBody), nameof(NetBody.DestroyNPC), [typeof(NetBody)])]
     internal class NetBody_Patch_DestroyNPC
     {
         public static void Prefix(NetBody __instance)

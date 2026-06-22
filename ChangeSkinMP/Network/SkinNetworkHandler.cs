@@ -18,26 +18,26 @@ public static class SkinNetworkHandler
 
         if (Net.is_server)
         {
-            try { Net.RegisterServerReciever((ushort)Messages.RegistrationMessage, Srv_Handler_Registration); }
+            try { Net.RegisterServerReceiver((ushort)Messages.RegistrationMessage, Srv_Handler_Registration); }
             catch (ArgumentException) { Log.Info($"Server receiver {Messages.RegistrationMessage} already registered"); }
-            try { Net.RegisterServerReciever((ushort)Messages.SendSkinMessage, Srv_Handler_SkinMessage); }
+            try { Net.RegisterServerReceiver((ushort)Messages.SendSkinMessage, Srv_Handler_SkinMessage); }
             catch (ArgumentException) { Log.Info($"Server receiver {Messages.SendSkinMessage} already registered"); }
         }
 
         if (Net.is_client_or_host)
         {
-            try { Net.RegisterClientReciever((ushort)Messages.RegistrySyncMessage, Cl_Handler_RegistrySync); }
+            try { Net.RegisterClientReceiver((ushort)Messages.RegistrySyncMessage, Cl_Handler_RegistrySync); }
             catch (ArgumentException) { Log.Info($"Client receiver {Messages.RegistrySyncMessage} already registered"); }
-            try { Net.RegisterClientReciever((ushort)Messages.SendSkinMessage, Cl_Handler_SkinMessage); }
+            try { Net.RegisterClientReceiver((ushort)Messages.SendSkinMessage, Cl_Handler_SkinMessage); }
             catch (ArgumentException) { Log.Info($"Client receiver {Messages.SendSkinMessage} already registered"); }
-            try { Net.RegisterClientReciever((ushort)Messages.SkinBanMessage, Cl_Handler_SkinBanMessage); }
+            try { Net.RegisterClientReceiver((ushort)Messages.SkinBanMessage, Cl_Handler_SkinBanMessage); }
             catch (ArgumentException) { Log.Info($"Client receiver {Messages.SkinBanMessage} already registered"); }
-            try { Net.RegisterClientReciever((ushort)Messages.SkinAnnouncementMessage, Cl_Handler_SkinAnnouncement); }
+            try { Net.RegisterClientReceiver((ushort)Messages.SkinAnnouncementMessage, Cl_Handler_SkinAnnouncement); }
             catch (ArgumentException) { Log.Info($"Client receiver {Messages.SkinAnnouncementMessage} already registered"); }
         }
     }
 
-    private static void Srv_Handler_Registration(uint senderClientId, ref NetDataReader reader)
+    private static void Srv_Handler_Registration(knetid senderClientId, ref NetDataReader reader)
     {
         try
         {
@@ -47,7 +47,7 @@ public static class SkinNetworkHandler
 
             if (NetworkRegistry.Get(clientId) == null)
             {
-                if (NetBody.NetIdToNetBody.TryGetValue(clientId, out NetBody netBody))
+                if (NetBody.NetIdToNetBody.TryGetValue((knetid)clientId, out NetBody netBody))
                     NetworkRegistry.RegisterConnected(netBody);
             }
 
@@ -100,7 +100,7 @@ public static class SkinNetworkHandler
             Log.Err($"Skin verify FAILED for \"{entry.PlayerInfo.Nickname}\": RepStart not active (Working=false)");
     }
 
-    private static void Srv_Handler_SkinMessage(uint senderClientId, ref NetDataReader reader)
+    private static void Srv_Handler_SkinMessage(knetid senderClientId, ref NetDataReader reader)
     {
         try
         {
@@ -149,7 +149,7 @@ public static class SkinNetworkHandler
         }
     }
 
-    private static void Cl_Handler_RegistrySync(uint _, ref NetDataReader reader)
+    private static void Cl_Handler_RegistrySync(knetid _, ref NetDataReader reader)
     {
         try
         {
@@ -165,7 +165,7 @@ public static class SkinNetworkHandler
                 if (NetworkRegistry.Get(clientId) != null)
                     continue;
 
-                if (NetBody.NetIdToNetBody.TryGetValue(clientId, out NetBody netBody))
+                if (NetBody.NetIdToNetBody.TryGetValue((knetid)clientId, out NetBody netBody))
                     NetworkRegistry.RegisterConnected(netBody);
             }
         }
@@ -175,7 +175,7 @@ public static class SkinNetworkHandler
         }
     }
 
-    private static void Cl_Handler_SkinMessage(uint _, ref NetDataReader reader)
+    private static void Cl_Handler_SkinMessage(knetid _, ref NetDataReader reader)
     {
         try
         {
@@ -208,7 +208,7 @@ public static class SkinNetworkHandler
         }
     }
 
-    private static void Cl_Handler_SkinBanMessage(uint _, ref NetDataReader reader)
+    private static void Cl_Handler_SkinBanMessage(knetid _, ref NetDataReader reader)
     {
         try
         {
@@ -234,7 +234,7 @@ public static class SkinNetworkHandler
         }
     }
 
-    private static void Cl_Handler_SkinAnnouncement(uint _, ref NetDataReader reader)
+    private static void Cl_Handler_SkinAnnouncement(knetid _, ref NetDataReader reader)
     {
         try
         {
