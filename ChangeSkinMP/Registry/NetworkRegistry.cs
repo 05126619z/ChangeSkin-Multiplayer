@@ -10,16 +10,35 @@ public static class NetworkRegistry
 {
     static HashSet<NetworkRegistryEntry> _players = new();
     public static IReadOnlyCollection<NetworkRegistryEntry> Players => _players;
-    public static LocalSkinController LocalPlayerSkinController { get; private set; }
+    public static LocalSkinController LocalPlayerSkinController { get; internal set; }
 
     public static void RegisterConnected(NetBody netBody)
     {
         if (Get(netBody) != null)
             return;
-        ChangeBody changeBody = netBody.body.gameObject.AddComponent<ChangeBody>();
-        changeBody.Init(netBody);
-        RemoteSkinController skinController =
-            netBody.body.gameObject.AddComponent<RemoteSkinController>();
+
+        GameObject go = netBody.body.gameObject;
+
+        // Idempotent: the SP fallback (TrySetupLocalPlayer) may have already
+        // attached a ChangeBody + LocalSkinController to this same rig. Adding
+        // duplicates would desync LocalSkinController.CBody (Awake grabs the
+        // first ChangeBody) from the NetBody-backed one. Reuse existing
+        // components; bind the NetBody onto an SP-created ChangeBody.
+        ChangeBody changeBody = go.GetComponent<ChangeBody>();
+        if (changeBody == null)
+        {
+            changeBody = go.AddComponent<ChangeBody>();
+            changeBody.Init(netBody);
+        }
+        else if (changeBody.NBody == null)
+        {
+            changeBody.BindNetBody(netBody);
+        }
+
+        RemoteSkinController skinController = go.GetComponent<RemoteSkinController>();
+        if (skinController == null)
+            skinController = go.AddComponent<RemoteSkinController>();
+
         PlayerInfo playerInfo = new(netBody);
         NetworkRegistryEntry networkRegistryEntry = new(
             netBody,
@@ -30,7 +49,12 @@ public static class NetworkRegistry
         _players.Add(networkRegistryEntry);
 
         if (netBody.netId == NetPlayer.LOCAL_PLAYER.clientId)
-            LocalPlayerSkinController = netBody.body.gameObject.AddComponent<LocalSkinController>();
+        {
+            LocalSkinController localController = go.GetComponent<LocalSkinController>();
+            if (localController == null)
+                localController = go.AddComponent<LocalSkinController>();
+            LocalPlayerSkinController = localController;
+        }
     }
 
     public static void RegisterDisconnected(NetBody netBody)
@@ -90,6 +114,15 @@ public static class NetworkRegistry
         }
         if (LocalPlayerSkinController != null)
         {
+            // SP fallback attaches a ChangeBody without a registry entry, so the
+            // loop above never destroys it. Tear it down here too, otherwise it
+            // lingers on the rig and RegisterConnected would create a duplicate
+            // when MP re-registers the same GameObject.
+            if (LocalPlayerSkinController.CBody != null)
+            {
+                LocalPlayerSkinController.CBody.ResetSkin();
+                UnityEngine.Object.Destroy(LocalPlayerSkinController.CBody);
+            }
             UnityEngine.Object.Destroy(LocalPlayerSkinController);
             LocalPlayerSkinController = null;
         }

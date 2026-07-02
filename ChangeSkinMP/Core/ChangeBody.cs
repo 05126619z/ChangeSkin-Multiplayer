@@ -31,10 +31,41 @@ namespace ChangeSkinMP
             {
                 foreach (string name in names)
                 {
-                    if (spriteRenderer.sprite.name == name)
+                    if (spriteRenderer.sprite != null && spriteRenderer.sprite.name == name)
                         spriteRenderers.Add(spriteRenderer);
                 }
             }
+        }
+
+        // Single-player path: no NetBody exists without a multiplayer lobby.
+        // Build the same renderer list straight from the player rig GameObject.
+        public void Init(GameObject bodyRoot)
+        {
+            OwnerID = 0;
+            NBody = null;
+            foreach (
+                SpriteRenderer spriteRenderer in bodyRoot.GetComponentsInChildren<SpriteRenderer>()
+            )
+            {
+                foreach (string name in names)
+                {
+                    if (spriteRenderer.sprite != null && spriteRenderer.sprite.name == name)
+                        spriteRenderers.Add(spriteRenderer);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Bind a NetBody to a ChangeBody that the SP fallback created without
+        /// one. Reuses the already-captured spriteRenderers list (does NOT
+        /// re-scan, which would duplicate entries). Called by
+        /// NetworkRegistry.RegisterConnected when transitioning SP -> MP on the
+        /// same player rig.
+        /// </summary>
+        internal void BindNetBody(NetBody netBody)
+        {
+            NBody = netBody;
+            OwnerID = netBody.netId;
         }
 
         public void ApplySkin(SkinObject _skin)

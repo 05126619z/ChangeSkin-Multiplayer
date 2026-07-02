@@ -15,7 +15,11 @@ namespace ChangeSkinMP
     {
         public static void Postfix(NetBody __instance)
         {
-            if (Net.is_server || Net.is_client_or_host)
+            // 4.0.1: is_server/is_client_or_host are true in SP too (Steamworks
+            // inits without a lobby). Require a real MP local player before
+            // registering NetBody instances; RegisterConnected compares against
+            // LOCAL_PLAYER.clientId and would NRE otherwise.
+            if (NetPlayer.LOCAL_PLAYER != null)
             {
                 NetworkRegistry.RegisterConnected(__instance);
                 ConsoleScript_Patch_RegisterAllCommands.RefreshPlayerNames();
@@ -23,7 +27,12 @@ namespace ChangeSkinMP
         }
     }
 
-    [HarmonyPatch(typeof(NetBody), nameof(NetBody.DestroyNPC))]
+    // NOTE: No [HarmonyPatch] attribute here. Krokosha 4.0.1 added overloads of
+    // NetBody.DestroyNPC, so attribute-based lookup is ambiguous and throws
+    // AmbiguousMatchException — which aborts Harmony.PatchAll() and skips every
+    // later patch class (command registration, sprite replacer). Plugin.Awake
+    // patches this manually after the resilient per-class loop, resolving the
+    // parameterless overload via reflection.
     internal class NetBody_Patch_DestroyNPC
     {
         public static void Prefix(NetBody __instance)
@@ -48,7 +57,13 @@ namespace ChangeSkinMP
                 "Control command for ChangeSkin",
                 delegate(string[] args)
                 {
-                    string output = ArgsParser.Execute(args);
+                    string output;
+                    try { output = ArgsParser.Execute(args); }
+                    catch (Exception e)
+                    {
+                        output = $"[ChangeSkin] Command error: {e.Message}";
+                        Plugin.Logger.LogError(e);
+                    }
                     ConsoleScript.instance.LogToConsole(output);
                 },
                 new Dictionary<int, List<string>>
@@ -67,6 +82,7 @@ namespace ChangeSkinMP
             RefreshArg1();
             ConsoleScript.Commands.Add(skinCommand);
             Con.localonly_commands.Add("skin");
+            Plugin.Logger.LogInfo("[ChangeSkin] 'skin' command registered via RegisterAllCommands patch");
         }
 
         internal static void RefreshArg1()
@@ -220,7 +236,15 @@ namespace ChangeSkinMP
         {
             if (args[0] == "skin")
             {
-                if (!Con.CanExecuteAdminCommands())
+                // Single-player has no lobby, so there is no host/admin role.
+                // KrokoshaMP's CanExecuteAdminCommands() returns false in SP and
+                // would lock out every skin command (load-local, enable, ...).
+                // Skip the admin gate entirely when no MP local player exists.
+                // (4.0.1 inits Steamworks in SP, so is_server is true even with
+                //  no lobby; LOCAL_PLAYER == null is the real no-lobby signal.)
+                bool isSinglePlayer = NetPlayer.LOCAL_PLAYER == null;
+
+                if (!isSinglePlayer && !Con.CanExecuteAdminCommands())
                 {
                     string subcommand = args.Length > 1 ? args[1].ToLowerInvariant() : "";
                     bool isAdminCommand = subcommand == "enable"
@@ -245,7 +269,13 @@ namespace ChangeSkinMP
                     }
                 }
 
-                string output = ArgsParser.Execute(args);
+                string output;
+                try { output = ArgsParser.Execute(args); }
+                catch (Exception e)
+                {
+                    output = $"[ChangeSkin] Command error: {e.Message}";
+                    Plugin.Logger.LogError(e);
+                }
                 __instance.LogToConsole(output);
                 __instance.AddCommandToLogAndClearInput();
                 return false;

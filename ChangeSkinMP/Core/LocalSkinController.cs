@@ -40,6 +40,14 @@ public class LocalSkinController : MonoBehaviour
 
     private void SendToOthers(SkinObject skin)
     {
+        // Single-player: no MP local player, nothing to broadcast.
+        // (4.0.1 inits Steamworks in SP too, so is_server/is_client_or_host
+        //  are unreliable; LOCAL_PLAYER == null is the real no-lobby signal.)
+        if (NetPlayer.LOCAL_PLAYER == null)
+        {
+            Log.Info($"Skin applied locally (single-player): {skin.Name}");
+            return;
+        }
         NetDataWriter writer = Net.CreateWriter((ushort)Messages.SendSkinMessage);
         writer.Put(CBody.OwnerID);
         writer.Put(true);
@@ -55,6 +63,12 @@ public class LocalSkinController : MonoBehaviour
     public void ResetSkin()
     {
         CBody.ResetSkin();
+        // Single-player: no MP local player, nothing to broadcast.
+        if (NetPlayer.LOCAL_PLAYER == null)
+        {
+            Log.Info("Skin reset locally (single-player)");
+            return;
+        }
         NetDataWriter writer = Net.CreateWriter((ushort)Messages.SendSkinMessage);
         writer.Put(CBody.OwnerID);
         writer.Put(false);
